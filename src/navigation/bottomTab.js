@@ -20,7 +20,7 @@ export default function BottomTabNavigator({route}) {
   return (
     <Tab.Navigator
       screenOptions={{
-        headerShown:false,
+        headerShown: false,
         tabBarInactiveTintColor: 'black',
         tabBarActiveTintColor: '#F5F5F5',
       }}>
@@ -63,7 +63,7 @@ export default function BottomTabNavigator({route}) {
 }
 
 const getTabBarVisibility = route => {
-  const routeName = getFocusedRouteNameFromRoute(route) ?? 'Feed';
+  const routeName = getFocusedRouteNameFromRoute(route) ?? 'Home';
   console.log(routeName);
 
   if (routeName == 'Home') return 'flex';

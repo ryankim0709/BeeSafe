@@ -62,6 +62,14 @@ export default function Home({navigation}) {
       <View style={styles.apiaryContainer}>
         <ApiaryCell />
       </View>
+
+      <TouchableOpacity
+        style={{width: 100, height: 100, alignSelf: 'center', marginTop: 100}}
+        onPress={() => {
+          auth().signOut();
+        }}>
+        <Text>Logout</Text>
+      </TouchableOpacity>
     </View>
   );
 }
