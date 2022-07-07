@@ -8,7 +8,8 @@ import {
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import ApiaryCell from '../components/apiaryCell';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import firestore from '@react-native-firebase/firestore';
 
 export default function Home({navigation}) {
   const [initializing, setInitializing] = useState(true);
@@ -24,12 +25,47 @@ export default function Home({navigation}) {
 
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-    console.log('Last sign in ' + auth().currentUser.metadata.lastSignInTime);
-    console.log(new Date(auth().currentUser.metadata.lastSignInTime).getTime());
-    console.log('Creation time ' + auth().currentUser.metadata.creationTime);
-    console.log(new Date(auth().currentUser.metadata.creationTime).getTime());
+    var creationTime = new Date(
+      auth().currentUser.metadata.creationTime,
+    ).getTime();
+    var lastLogIn = new Date(
+      auth().currentUser.metadata.lastSignInTime,
+    ).getTime();
+
+    if (lastLogIn - creationTime <= 2000) {
+      initUser();
+    }
     return subscriber; // unsubscribe on unmount
   }, []);
+
+  async function initUser() {
+    console.log('NEW USER');
+    var displayname = auth().currentUser.displayName;
+    var email = auth().currentUser.email;
+    console.log(auth().currentUser);
+    firestore()
+      .collection(`Users`)
+      .doc(email)
+      .set({
+        email: {email},
+        name: {displayname},
+      })
+      .then(() => {
+        console.log('User initialized!');
+      });
+
+    firestore()
+      .collection('Users')
+      .doc(email)
+      .collection('Apiaries')
+      .doc('init')
+      .set({
+        name: 'init',
+      })
+      .then(() => {
+        console.log('Something?');
+      });
+  }
 
   if (initializing) return null;
 
@@ -72,8 +108,8 @@ export default function Home({navigation}) {
         style={{width: 100, height: 100, alignSelf: 'center', marginTop: 100}}
         onPress={async () => {
           auth().signOut();
-          await GoogleSignin.revokeAccess()
-          await GoogleSignin.signOut()
+          await GoogleSignin.revokeAccess();
+          await GoogleSignin.signOut();
         }}>
         <Text>Logout</Text>
       </TouchableOpacity>
