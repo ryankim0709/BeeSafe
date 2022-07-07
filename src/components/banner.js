@@ -2,14 +2,14 @@ import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 
-export default function Banner({props}) {
+export default function Banner(props) {
   return (
     <LinearGradient
       style={styles.container}
       colors={['#F09819', '#EDDE5D']}
       start={{x: 0, y: 0}}
       end={{x: 1, y: 0}}>
-      <Text style={styles.bannerText}>Add Your Apiary</Text>
+      <Text style={styles.bannerText}>{props.text}</Text>
     </LinearGradient>
   );
 }
