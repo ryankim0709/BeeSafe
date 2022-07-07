@@ -126,6 +126,11 @@ export default function CreateApiary({navigation, route}) {
       .then(() => {
         console.log('Apiary added!');
       });
+
+    // firestore()
+    //   .collection(`Users/${user.email}/Apiaries`)
+    //   .doc(name)
+    //   .collection('Hives');
   };
   return (
     <KeyboardAvoidingView
