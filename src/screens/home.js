@@ -8,13 +8,14 @@ import {
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import ApiaryCell from '../components/apiaryCell';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 export default function Home({navigation}) {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState();
 
-  function onAuthStateChanged(user) {
-    setUser(user);
+  async function onAuthStateChanged(user) {
+    await setUser(user);
     if (!user) {
       navigation.navigate('Login');
     }
@@ -23,6 +24,10 @@ export default function Home({navigation}) {
 
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+    console.log('Last sign in ' + auth().currentUser.metadata.lastSignInTime);
+    console.log(new Date(auth().currentUser.metadata.lastSignInTime).getTime());
+    console.log('Creation time ' + auth().currentUser.metadata.creationTime);
+    console.log(new Date(auth().currentUser.metadata.creationTime).getTime());
     return subscriber; // unsubscribe on unmount
   }, []);
 
@@ -65,8 +70,10 @@ export default function Home({navigation}) {
 
       <TouchableOpacity
         style={{width: 100, height: 100, alignSelf: 'center', marginTop: 100}}
-        onPress={() => {
+        onPress={async () => {
           auth().signOut();
+          await GoogleSignin.revokeAccess()
+          await GoogleSignin.signOut()
         }}>
         <Text>Logout</Text>
       </TouchableOpacity>

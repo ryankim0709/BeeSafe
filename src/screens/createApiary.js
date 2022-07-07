@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   TouchableOpacity,
@@ -9,11 +9,124 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
+  Alert,
+  Modal,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import Banner from '../components/banner';
 import Icon from 'react-native-vector-icons/Feather';
+import storage from '@react-native-firebase/storage';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
 export default function CreateApiary({navigation, route}) {
+  const [name, setName] = useState();
+  const [latitude, setLatitude] = useState();
+  const [longitude, setLongitude] = useState();
+  const [notes, setNotes] = useState();
+  const [downloadURL, setDownloadUrl] = useState();
+
+  const [image, setImage] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [transferred, setTransferred] = useState(0);
+  const [uri, setUri] = useState(image?.assets && image.assets[0].uri);
+
+  const [user, setUser] = useState();
+  const [modalIsVisible, setModalIsVisible] = useState(false);
+
+  const [errorMessage, setErrorMessage] = useState();
+
+  function onAuthStateChanged(user) {
+    setUser(user);
+  }
+
+  useEffect(() => {
+    setUri(image?.assets && image.assets[0].uri);
+    auth().onAuthStateChanged(onAuthStateChanged);
+  }, [image]);
+
+  async function selectImage() {
+    const options = {
+      maxWidth: 2000,
+      maxHeight: 2000,
+      storageOptions: {
+        skipBackup: true,
+        path: 'images',
+      },
+    };
+    launchImageLibrary(options, setImage);
+  }
+
+  async function takeImage() {
+    const options = {
+      saveToPhotos: true,
+      mediaType: 'photo',
+      includeBase64: false,
+    };
+    launchCamera(options, setImage);
+  }
+
+  const uploadImage = async () => {
+    if (!uri || !image) {
+      setModalIsVisible(true);
+      setErrorMessage('Please uplaod an image of your apiary');
+      return;
+    }
+    if (!name) {
+      setModalIsVisible(true);
+      setErrorMessage('Please add your apiary name');
+      return;
+    }
+    if (!latitude || !longitude) {
+      setModalIsVisible(true);
+      setErrorMessage('Please add the latitude/longitude of your apiary');
+      return;
+    }
+    const filename = uri.substring(uri.lastIndexOf('/') + 1);
+    console.log('File Name ' + filename);
+    const uploadUri = Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
+    console.log('Upload URI ' + uploadUri);
+    setUploading(true);
+    setTransferred(0);
+    const task = storage().ref(filename).putFile(uploadUri);
+    task.on('state_changed', snapshot => {
+      setTransferred(
+        Math.round(snapshot.bytesTransferred / snapshot.totalBytes) * 10000,
+      );
+    });
+    try {
+      await task;
+    } catch (e) {
+      console.error(e);
+    }
+    const downloadUrlTemp = await storage().ref(filename).getDownloadURL();
+    try {
+      var finalURL = (await downloadUrlTemp).valueOf();
+      console.log('Donwload URL ' + finalURL);
+      setDownloadUrl(finalURL);
+    } catch (e) {
+      console.log(e);
+    }
+    setUploading(false);
+    console.log('Uploaded!');
+    setImage(null);
+    console.log();
+
+    firestore()
+      .collection(`Users/${user.email}/Apiaries`)
+      .doc(name)
+      .set({
+        name: {name},
+        latitude: {latitude},
+        longitude: {longitude},
+        notes: {notes},
+        downloadURL: {downloadURL},
+      })
+      .then(() => {
+        console.log('Apiary added!');
+      });
+  };
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -28,14 +141,26 @@ export default function CreateApiary({navigation, route}) {
           {/* Image upload */}
           <View style={styles.imageContainer}>
             <ImageBackground
-              // source={require()} Where to put image
+              source={{uri: uri}}
               style={styles.backgroundImage}
               imageStyle={{borderRadius: 10}}
               resizeMode="cover">
               {/* Open image library for image picking */}
-              <TouchableOpacity style={{marginLeft: '90%', marginTop: '29%'}}>
-                <Icon name="upload-cloud" size={27.63} />
-              </TouchableOpacity>
+              <View
+                style={{
+                  marginLeft: '80%',
+                  marginTop: '29%',
+                  flexDirection: 'row',
+                }}>
+                <TouchableOpacity
+                  onPress={takeImage}
+                  style={{paddingRight: '10%'}}>
+                  <Icon name="camera" size={27.63} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={selectImage}>
+                  <Icon name="upload-cloud" size={27.63} />
+                </TouchableOpacity>
+              </View>
             </ImageBackground>
           </View>
 
@@ -51,12 +176,31 @@ export default function CreateApiary({navigation, route}) {
               paddingLeft: 5,
             }}
             placeholder="Name"
+            onChangeText={text => {
+              setName(text);
+            }}
           />
 
           {/* Latitude and Longitude information form */}
           <View style={styles.coordContainer}>
-            <TextInput style={styles.posInputBox} placeholder="Latitude" />
-            <TextInput style={styles.posInputBox} placeholder="Longitude" />
+            <TextInput
+              style={styles.posInputBox}
+              placeholder="Latitude"
+              keyboardType="numeric"
+              value={latitude}
+              onChangeText={text => {
+                setLatitude(text);
+              }}
+            />
+            <TextInput
+              style={styles.posInputBox}
+              placeholder="Longitude"
+              value={longitude}
+              keyboardType="numeric"
+              onChangeText={text => {
+                setLongitude(text);
+              }}
+            />
           </View>
 
           {/* Get Current Location button */}
@@ -77,14 +221,19 @@ export default function CreateApiary({navigation, route}) {
           <TextInput
             style={styles.notesInput}
             placeholder="Notes"
+            value={notes}
             multiline
             placeholderTextColor={'#86868A'}
+            onChangeText={text => {
+              setNotes(text);
+            }}
           />
 
           {/* Create & Cancel buttons*/}
           <View style={styles.createCancelContainer}>
             <TouchableOpacity
-              style={[styles.createCancelButton, {backgroundColor: '#EEC746'}]}>
+              style={[styles.createCancelButton, {backgroundColor: '#EEC746'}]}
+              onPress={uploadImage}>
               <Text style={[styles.createCancelText, {color: 'white'}]}>
                 Create
               </Text>
@@ -99,6 +248,52 @@ export default function CreateApiary({navigation, route}) {
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* Error Modal */}
+          <Modal
+            transparent={true}
+            animationType={'slide'}
+            visible={modalIsVisible}
+            onRequestClose={() => {
+              setModalIsVisible(false);
+            }}>
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <View style={styles.modalView}>
+                <Text style={styles.errorText}>{errorMessage}</Text>
+                <LinearGradient
+                  colors={['#F09819', '#F09819', '#EDDE5D']}
+                  start={{x: 0, y: 0}}
+                  end={{x: 1, y: 0}}
+                  style={{
+                    borderRadius: 15,
+                    paddingLeft: 10,
+                    paddingRight: 10,
+                    paddingTop: 5,
+                    paddingBottom: 5,
+                    marginTop: 10,
+                  }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setModalIsVisible(false);
+                    }}>
+                    <Text
+                      style={{
+                        fontFamily: 'Montserrat',
+                        fontWeight: '600',
+                        color: 'white',
+                      }}>
+                      Close
+                    </Text>
+                  </TouchableOpacity>
+                </LinearGradient>
+              </View>
+            </View>
+          </Modal>
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
@@ -194,5 +389,30 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat',
     fontWeight: '600',
     fontSize: 18,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    paddingLeft: 35,
+    paddingRight: 35,
+    paddingTop: 20,
+    paddingBottom: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: 'red',
+    fontFamily: 'Montserrat',
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
