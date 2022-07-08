@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Dimensions} from 'react-native';
+import {View, Text, StyleSheet, Dimensions, Image} from 'react-native';
 
 export default function ApiaryCell() {
   return (

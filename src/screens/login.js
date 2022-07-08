@@ -102,129 +102,26 @@ export default function Login({navigation}) {
             />
           </View>
 
-          {/* App Name */}
           <View
             style={{
-              alignItems: 'center',
-              marginTop: '10%',
-              width: '70.09%',
-              alignSelf: 'center',
-              height: '15.33%',
-            }}>
-            <Text style={styles.appNameText}>BeeSafe</Text>
-          </View>
-
-          {/* Text Input*/}
-          <TextInput
-            style={[styles.input, {marginTop: '0.00863%', paddingLeft: 5}]}
-            placeholder="ID"
-            keyboardType="email-address"
-            autoComplete="email"
-            autoCapitalize="none"
-            onChangeText={text => {
-              setEmail(text);
-            }}
-          />
-          <TextInput
-            style={[styles.input, {marginTop: '1.1187%', paddingLeft: 5}]}
-            placeholder="PASSWORD"
-            autoCapitalize="none"
-            secureTextEntry
-            onChangeText={text => {
-              setPassword(text);
-            }}
-          />
-          <Text style={{alignSelf: 'center', color: 'red'}}>{error}</Text>
-
-          {/* Login + Register Button */}
-          <View
-            style={{
-              width: '57.24%',
-              height: '4.859%',
-              flexDirection: 'row',
-              alignSelf: 'center',
               justifyContent: 'space-evenly',
-              marginTop: '2%',
+              height: '51.7%',
             }}>
+            {/* App Name */}
+            <Text style={styles.appNameText}>BeeSafe</Text>
+
+            {/* Register/Sign in with Google */}
             <LinearGradient
               colors={['#F09819', '#F09819', '#EDDE5D']}
               start={{x: 0, y: 0}}
               end={{x: 1, y: 0}}
-              style={{borderRadius: 15, width: '40%'}}>
-              <TouchableOpacity
-                style={styles.loginButton}
-                onPress={() => {
-                  signIn();
-                }}>
-                <Text
-                  style={{
-                    fontFamily: 'Montserrat',
-                    fontWeight: '600',
-                    fontSize: 18,
-                    lineHeight: 22,
-                  }}>
-                  Login
-                </Text>
-              </TouchableOpacity>
-            </LinearGradient>
-
-            <LinearGradient
-              colors={['#F09819', '#F09819', '#EDDE5D']}
-              start={{x: 1, y: 0}}
-              end={{x: 0, y: 0}}
-              style={{borderRadius: 15, width: '50%'}}>
-              <TouchableOpacity style={styles.loginButton}>
-                <Text
-                  style={{
-                    fontFamily: 'Montserrat',
-                    fontWeight: '600',
-                    fontSize: 18,
-                    lineHeight: 22,
-                  }}>
-                  Register
-                </Text>
-              </TouchableOpacity>
-            </LinearGradient>
-          </View>
-
-          {/* OR divider */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              alignSelf: 'center',
-              marginTop: '2%',
-            }}>
-            <View style={{height: 1, backgroundColor: 'grey', width: 100}} />
-            <View>
-              <Text
-                style={{
-                  width: 50,
-                  textAlign: 'center',
-                  color: 'grey',
-                  fontFamily: 'Montserrat',
-                }}>
-                Or
-              </Text>
-            </View>
-            <View style={{height: 1, backgroundColor: 'grey', width: 100}} />
-          </View>
-
-          {/* Register/Sign in with Google */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              alignSelf: 'center',
-              height: 50,
-              width: '57.24%',
-              marginTop: '2%',
-            }}>
-            <LinearGradient
-              colors={['#F09819', '#F09819', '#EDDE5D']}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}
-              style={{width: '100%', height: '100%', borderRadius: 15}}>
+              style={{
+                alignItems: 'center',
+                alignSelf: 'center',
+                height: 50,
+                width: '57.24%',
+                borderRadius: 15,
+              }}>
               <TouchableOpacity
                 style={[
                   styles.loginButton,
@@ -268,15 +165,7 @@ const styles = StyleSheet.create({
     color: '#F0991A',
     fontFamily: 'Montserrat',
     fontWeight: 'bold',
-  },
-  input: {
     alignSelf: 'center',
-    alignItems: 'center',
-    width: '54%',
-    height: '4.2116%',
-    borderWidth: 1,
-    borderColor: '#F09819',
-    borderRadius: 10,
   },
   loginButton: {
     width: '100%',

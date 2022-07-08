@@ -37,8 +37,8 @@ export default function CreateApiary({navigation, route}) {
 
   const [errorMessage, setErrorMessage] = useState();
 
-  function onAuthStateChanged(user) {
-    setUser(user);
+  async function onAuthStateChanged(user) {
+    await setUser(user);
   }
 
   useEffect(() => {
@@ -100,37 +100,44 @@ export default function CreateApiary({navigation, route}) {
     } catch (e) {
       console.error(e);
     }
-    const downloadUrlTemp = await storage().ref(filename).getDownloadURL();
+    var downloadUrlTemp = await storage().ref(filename).getDownloadURL();
+    console.log(downloadUrlTemp);
     try {
       var finalURL = (await downloadUrlTemp).valueOf();
       console.log('Donwload URL ' + finalURL);
-      setDownloadUrl(finalURL);
+      await setDownloadUrl(finalURL);
     } catch (e) {
       console.log(e);
     }
-    setUploading(false);
+
     console.log('Uploaded!');
     setImage(null);
     console.log();
 
+    var email = await auth().currentUser.email;
+
+    console.log(
+      name + ' ' + latitude + ' ' + longitude + ' ' + notes + ' ' + uri,
+    );
+
     firestore()
-      .collection(`Users/${user.email}/Apiaries`)
+      .collection('Users')
+      .doc(email)
+      .collection('Apiaries')
       .doc(name)
       .set({
         name: {name},
         latitude: {latitude},
         longitude: {longitude},
         notes: {notes},
-        downloadURL: {downloadURL},
+        uri: {uri},
       })
       .then(() => {
         console.log('Apiary added!');
+      })
+      .catch(e => {
+        console.log(e);
       });
-
-    // firestore()
-    //   .collection(`Users/${user.email}/Apiaries`)
-    //   .doc(name)
-    //   .collection('Hives');
   };
   return (
     <KeyboardAvoidingView

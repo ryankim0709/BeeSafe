@@ -51,19 +51,7 @@ export default function Home({navigation}) {
         name: {displayname},
       })
       .then(() => {
-        console.log('User initialized!');
-      });
-
-    firestore()
-      .collection('Users')
-      .doc(email)
-      .collection('Apiaries')
-      .doc('init')
-      .set({
-        name: 'init',
-      })
-      .then(() => {
-        console.log('Something?');
+        console.log('User basics initialized!');
       });
   }
 
