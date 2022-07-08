@@ -1,20 +1,19 @@
+// UI imports
 import React from 'react';
-
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 
+// Navigation imports
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
+
+// Componenet imports
 import Home from '../screens/home.js';
 import CreateApiary from '../screens/createApiary.js';
 
 const Tab = createBottomTabNavigator();
 
-{
-  /* screenOptions: {tabBarShowLabel: false, headerShown: false tabBarStyle:{}} */
-}
-{
-  /*tabBarBadge*/
-}
+// screenOptions: {tabBarShowLabel: false, headerShown: false tabBarStyle:{}}
+// tabBarBadge
 
 export default function BottomTabNavigator({route}) {
   return (
@@ -63,9 +62,11 @@ export default function BottomTabNavigator({route}) {
 }
 
 const getTabBarVisibility = route => {
+  // Get route name
   const routeName = getFocusedRouteNameFromRoute(route) ?? 'Home';
   console.log(routeName);
 
+  // Is bottom tab navigator visible or not
   if (routeName == 'Home') return 'flex';
   if (routeName == 'Create Apiary') return 'none';
 };
