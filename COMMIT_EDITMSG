@@ -1,0 +1,24 @@
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Date:      Thu Jul 7 20:09:08 2022 -0700
+#
+# On branch loginUI_apiaryTesting
+# Changes to be committed:
+#	modified:   src/components/apiaryCell.js
+#	modified:   src/screens/createApiary.js
+#	modified:   src/screens/home.js
+#	modified:   src/screens/login.js
+#
+1. Tested login + apiary creation
+2. Sub-collections work if we call them individually. In the past we did 
+firestore().collection(`Users/{user.emal}/Apiaries)` which made it not work.
+3. Store the image URI instead of the download link. Download link would be too slow to generate
+
+Future goals
+1. Clean code
+	- Get rid of random imports
+	- Comment
+	- Remove useless code/variables
+	- pod install & npm install
+2. current location button
