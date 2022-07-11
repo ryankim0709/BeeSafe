@@ -1,6 +1,7 @@
 // UI imports
 import React from 'react';
-import Icon from 'react-native-vector-icons/Feather';
+import Feather from 'react-native-vector-icons/Feather';
+import Ionicon from 'react-native-vector-icons/Ionicons';
 
 // Navigation imports
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -9,6 +10,7 @@ import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
 // Componenet imports
 import Home from '../screens/home.js';
 import CreateApiary from '../screens/createApiary.js';
+import Settings from '../screens/settings.js';
 
 const Tab = createBottomTabNavigator();
 
@@ -28,7 +30,7 @@ export default function BottomTabNavigator({route}) {
         component={Home}
         options={{
           tabBarIcon: ({color, size}) => (
-            <Icon name="home" color={color} size={size} />
+            <Feather name="home" color={color} size={size} />
           ),
           tabBarStyle: {
             backgroundColor: '#F09819',
@@ -45,7 +47,24 @@ export default function BottomTabNavigator({route}) {
         component={CreateApiary}
         options={{
           tabBarIcon: ({color, size}) => (
-            <Icon name="plus-circle" color={color} size={size} />
+            <Feather name="plus-circle" color={color} size={size} />
+          ),
+          tabBarStyle: {
+            backgroundColor: '#F09819',
+            position: 'absolute',
+            overflow: 'hidden',
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            display: getTabBarVisibility(route),
+          },
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={Settings}
+        options={{
+          tabBarIcon: ({color, size}) => (
+            <Ionicon name="ios-settings-outline" color={color} size={size} />
           ),
           tabBarStyle: {
             backgroundColor: '#F09819',
@@ -67,6 +86,6 @@ const getTabBarVisibility = route => {
   console.log(routeName);
 
   // Is bottom tab navigator visible or not
-  if (routeName == 'Home') return 'flex';
+  if (routeName == 'Home' || routeName == 'Settings') return 'flex';
   if (routeName == 'Create Apiary') return 'none';
 };

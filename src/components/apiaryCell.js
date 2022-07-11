@@ -2,19 +2,25 @@
 import React from 'react';
 import {View, Text, StyleSheet, Dimensions, Image} from 'react-native';
 
-export default function ApiaryCell() {
+export default function ApiaryCell(props) {
+  const uri = props.downloadurl;
   return (
     // Container
     <View style={styles.container}>
       <View style={styles.apiaryBox}>
         {/* Image box */}
-        <View style={styles.photoBox}>{/* Image goes here*/}</View>
+        <View style={styles.photoBox}>
+          {/* Image goes here*/}
+          <Image source={{uri: uri}} style={styles.coverImage} />
+        </View>
 
         {/* Apiary information text container */}
         <View style={styles.textBox}>
           {/* Apiary information */}
-          <Text style={styles.infoText}>Apiary Name</Text>
-          <Text style={styles.infoText}>Apiary Location</Text>
+          <Text style={styles.infoText}>{props.name}</Text>
+          <Text style={styles.infoText}>
+            {props.latitude} {props.longitude}
+          </Text>
         </View>
       </View>
     </View>
@@ -54,5 +60,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat',
     fontWeight: '700',
     fontSize: 13,
+  },
+  // Cover image
+  coverImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 10,
   },
 });

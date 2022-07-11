@@ -1,25 +1,22 @@
 // UI imports
 import React, {useState, useEffect} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native';
+import {View, Text, StyleSheet, ScrollView} from 'react-native';
 
 // Auth imports
 import auth from '@react-native-firebase/auth';
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import firestore from '@react-native-firebase/firestore';
 
 // Component imports
 import ApiaryCell from '../components/apiaryCell';
 
+// Navigation imports
+import {useFocusEffect} from '@react-navigation/native';
+
 export default function Home({navigation}) {
   // Auth states
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState();
+  const [data, setData] = useState([]);
 
   // Auth state change
   async function onAuthStateChanged(user) {
@@ -29,6 +26,17 @@ export default function Home({navigation}) {
     }
     if (initializing) setInitializing(false);
   }
+
+  useFocusEffect(
+    React.useCallback(() => {
+      getData();
+
+      return () => {
+        console.log('Unfocused. Clean up here');
+        setData();
+      };
+    }, []),
+  );
 
   useEffect(() => {
     // Auth state change
@@ -46,9 +54,27 @@ export default function Home({navigation}) {
       // last log in - current <= 2 seconds
       initUser();
     }
+    getData();
     return subscriber; // unsubscribe on unmount
   }, []);
 
+  async function getData() {
+    var dataTemp = [];
+    console.log('Retrieving data');
+    firestore()
+      .collection('Users')
+      .doc('ryankim0709@gmail.com')
+      .collection('Apiaries')
+      .get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          dataTemp.push(doc.data());
+        });
+      })
+      .then(() => {
+        setData(dataTemp);
+      });
+  }
   async function initUser() {
     console.log('NEW USER');
     // using auth().currentUser is faster than user.
@@ -71,7 +97,7 @@ export default function Home({navigation}) {
   }
 
   if (initializing) return null;
-
+  if (!data) return null;
   return (
     // Container
     <View style={styles.container}>
@@ -88,20 +114,27 @@ export default function Home({navigation}) {
       {/* Apiary list */}
       {/* Use ScrollView for just the Apiaries or the whole screen? */}
 
-      <View style={styles.apiaryContainer}>
-        <ApiaryCell />
-      </View>
+      <ScrollView
+        style={{
+          width: '100%',
+          marginTop: '2.8077%',
+          borderRadius: 10,
+        }}>
+        {data.map((data, key) => (
+          <View style={styles.apiaryContainer} key={key}>
+            <ApiaryCell
+              name={data['name']}
+              latitude={data['latitude']}
+              longitude={data['longitude']}
+              notes={data['notes']}
+              downloadurl={data['downloadurl']}
+            />
+          </View>
+        ))}
+      </ScrollView>
 
       {/* Random logout button for testing */}
-      <TouchableOpacity
-        style={{width: 100, height: 100, alignSelf: 'center', marginTop: 100}}
-        onPress={async () => {
-          auth().signOut();
-          await GoogleSignin.revokeAccess();
-          await GoogleSignin.signOut();
-        }}>
-        <Text>Logout</Text>
-      </TouchableOpacity>
+      <View style={{width: '100%', height: '7.1923%', borderRadius: 10}}></View>
     </View>
   );
 }

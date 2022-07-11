@@ -24,6 +24,9 @@ import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 
+// Navigation imports
+import {useFocusEffect} from '@react-navigation/native';
+
 export default function CreateApiary({navigation, route}) {
   // Apiary creation states
   const [name, setName] = useState();
@@ -38,12 +41,34 @@ export default function CreateApiary({navigation, route}) {
   const [user, setUser] = useState();
   const [modalIsVisible, setModalIsVisible] = useState(false);
 
+  // Setup states
+  const [ready, setReady] = useState(false);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('HERE');
+      setUri(null);
+      console.log(uri);
+      setReady(true);
+      return () => {
+        setReady(false);
+        setName();
+        setLatitude();
+        setLongitude();
+        setNotes();
+        setImage(null);
+        setUri(null);
+      };
+    }, []),
+  );
+
   // Auth state change
   async function onAuthStateChanged(user) {
     await setUser(user);
   }
 
   useEffect(() => {
+    console.log('here');
     // Image URI for display
     setUri(image?.assets && image.assets[0].uri);
     // Auth set change
@@ -73,7 +98,7 @@ export default function CreateApiary({navigation, route}) {
     launchCamera(options, setImage);
   }
 
-  const uploadImage = async () => {
+  const uploadApiary = async () => {
     // Error handling
     if (!uri || !image) {
       setModalIsVisible(true);
@@ -103,6 +128,16 @@ export default function CreateApiary({navigation, route}) {
     setImage(null);
     // Image upload complete
 
+    const downloadlink = (
+      await storage().ref(filename).getDownloadURL()
+    ).toString();
+    try {
+      await downloadlink;
+      console.log(downloadlink);
+    } catch (e) {
+      console.error(e);
+    }
+
     // Add apiary to firestore
     var email = await auth().currentUser.email;
     firestore()
@@ -111,20 +146,29 @@ export default function CreateApiary({navigation, route}) {
       .collection('Apiaries')
       .doc(name)
       .set({
-        name: {name},
-        latitude: {latitude},
-        longitude: {longitude},
-        notes: {notes},
-        uri: {uri},
+        name: name,
+        latitude: latitude,
+        longitude: longitude,
+        notes: notes,
+        downloadurl: downloadlink,
       })
       .then(() => {
         console.log('Apiary added!');
+        setName();
+        setLatitude();
+        setLongitude();
+        setNotes();
+        setImage(null);
+        setUri(null);
+        navigation.goBack();
       })
       .catch(e => {
         console.log(e);
       });
     // Apiary addition complete
   };
+
+  if (!ready) return null;
   return (
     // Container
     <KeyboardAvoidingView
@@ -171,6 +215,7 @@ export default function CreateApiary({navigation, route}) {
           <TextInput
             style={styles.apiaryNameForm}
             placeholder="Name"
+            value={name}
             onChangeText={text => {
               setName(text);
             }}
@@ -220,7 +265,7 @@ export default function CreateApiary({navigation, route}) {
             {/* Create button */}
             <TouchableOpacity
               style={[styles.createCancelButton, {backgroundColor: '#EEC746'}]}
-              onPress={uploadImage}>
+              onPress={uploadApiary}>
               <Text style={[styles.createCancelText, {color: 'white'}]}>
                 Create
               </Text>
