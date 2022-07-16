@@ -34,8 +34,8 @@ import Geolocation from 'react-native-geolocation-service';
 export default function CreateHive({navigation, route}) {
   // Apiary creation states
   const [name, setName] = useState();
-  const [latitude, setLatitude] = useState();
-  const [longitude, setLongitude] = useState();
+  const [frames, setFrames] = useState();
+  const [type, setType] = useState();
   const [notes, setNotes] = useState();
   const [image, setImage] = useState(null);
   const [uri, setUri] = useState(image?.assets && image.assets[0].uri);
@@ -55,8 +55,8 @@ export default function CreateHive({navigation, route}) {
       return () => {
         setReady(false);
         setName();
-        setLatitude();
-        setLongitude();
+        setFrames();
+        setType();
         setNotes();
         setImage(null);
         setUri(null);
@@ -99,11 +99,30 @@ export default function CreateHive({navigation, route}) {
     launchCamera(options, setImage);
   }
 
-  const uploadApiary = async () => {
+  const uploadHive = async () => {
+    var months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'June',
+      'July',
+      'Aug',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    var today = new Date();
+    var day = String(today.getDate());
+    var month = String(months[today.getMonth()]);
+    var year = String(today.getFullYear());
+
+    const apiaryName = route['name'];
     // Error handling
     if (!uri || !image) {
       setModalIsVisible(true);
-      setErrorMessage('Please uplaod an image of your apiary');
+      setErrorMessage('Please uplaod an image of your hive');
       return;
     }
     if (!name) {
@@ -111,9 +130,14 @@ export default function CreateHive({navigation, route}) {
       setErrorMessage('Please add your apiary name');
       return;
     }
-    if (!latitude || !longitude) {
+    if (!frames) {
       setModalIsVisible(true);
-      setErrorMessage('Please add the latitude/longitude of your apiary');
+      setErrorMessage('Please add the number of frames in your hive');
+      return;
+    }
+    if (!type) {
+      setModalIsVisible(true);
+      setErrorMessage('Please add the type of your hive');
       return;
     }
 
@@ -145,28 +169,35 @@ export default function CreateHive({navigation, route}) {
       .collection('Users')
       .doc(email)
       .collection('Apiaries')
+      .doc(apiaryName)
+      .collection('Hives')
       .doc(name)
       .set({
         name: name,
-        latitude: latitude,
-        longitude: longitude,
+        frames: frames,
+        type: type,
         notes: notes,
         downloadurl: downloadlink,
+        day: day,
+        month: month,
+        year: year,
       })
       .then(() => {
-        console.log('Apiary added!');
+        console.log('Hive added!');
         setName();
-        setLatitude();
-        setLongitude();
+        setFrames();
+        setType();
         setNotes();
         setImage(null);
         setUri(null);
-        navigation.goBack();
+        navigation.navigate('ApiaryBottomTabs', {
+          screen: 'View Apiary',
+        });
       })
       .catch(e => {
         console.log(e);
       });
-    // Apiary addition complete
+    // Hive addition complete
   };
 
   if (!ready) return null;
@@ -180,7 +211,7 @@ export default function CreateHive({navigation, route}) {
         <View style={styles.container}>
           {/* Banner Container */}
           <View style={styles.bannerContainer}>
-            <Banner text="Add Your Apiary" />
+            <Banner text="Add Your Hive" />
           </View>
 
           {/* Image upload container */}
@@ -222,36 +253,30 @@ export default function CreateHive({navigation, route}) {
             }}
           />
 
-          {/* Latitude and Longitude form */}
-          <View style={styles.coordContainer}>
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoText}>Frames</Text>
             <TextInput
-              style={styles.posInputBox}
-              placeholder="Latitude"
-              keyboardType="numeric"
-              value={latitude}
+              style={styles.infoInput}
+              keyboardType={'numeric'}
+              placeholder="Frames"
+              value={frames}
               onChangeText={text => {
-                setLatitude(text);
-              }}
-            />
-            <TextInput
-              style={styles.posInputBox}
-              placeholder="Longitude"
-              value={longitude}
-              keyboardType="numeric"
-              onChangeText={text => {
-                setLongitude(text);
+                setFrames(text);
               }}
             />
           </View>
 
-          {/* Get Current Location button */}
-          <TouchableOpacity
-            style={styles.getCurrLocationButton}
-            onPress={() => {
-              getCurrLocation();
-            }}>
-            <Text style={styles.getCurrLocationText}>Get Current Location</Text>
-          </TouchableOpacity>
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoText}>Type</Text>
+            <TextInput
+              style={styles.infoInput}
+              placeholder="Type"
+              value={type}
+              onChangeText={text => {
+                setType(text);
+              }}
+            />
+          </View>
 
           {/* Notes form */}
           <TextInput
@@ -270,7 +295,7 @@ export default function CreateHive({navigation, route}) {
             {/* Create button */}
             <TouchableOpacity
               style={[styles.createCancelButton, {backgroundColor: '#EEC746'}]}
-              onPress={uploadApiary}>
+              onPress={uploadHive}>
               <Text style={[styles.createCancelText, {color: 'white'}]}>
                 Create
               </Text>
@@ -283,7 +308,6 @@ export default function CreateHive({navigation, route}) {
                 navigation.navigate('ApiaryBottomTabs', {
                   screen: 'View Apiary',
                 });
-                console.log('name' + route.name);
               }}>
               <Text style={[styles.createCancelText, {color: '#EEC746'}]}>
                 Cancel
@@ -383,43 +407,31 @@ const styles = StyleSheet.create({
     borderColor: '#F09819',
     paddingLeft: 5,
   },
-  // Coordinates form container
-  coordContainer: {
-    width: '84.3457%',
+  // Frames and type textinput container
+  infoContainer: {
+    marginTop: '3.455%',
+    width: '85.981%',
     height: '4.21166%',
-    alignSelf: 'center',
-    marginTop: '5.29157%',
     justifyContent: 'space-between',
     flexDirection: 'row',
   },
-  // Current location button text
-  getCurrLocationText: {
-    color: 'white',
+  // Information text (next to TextInput)
+  infoText: {
     fontFamily: 'Montserrat',
     fontWeight: '600',
-    fontSize: 17,
+    fontSize: 18,
     lineHeight: 21.94,
+    justifyContent: 'center',
+    alignSelf: 'center',
   },
-  // Latitude/longitude form box
-  posInputBox: {
+  // Information fomr
+  infoInput: {
+    width: '55.36723%',
     height: '100%',
-    width: '45.5840%',
-    paddingLeft: 5,
     borderRadius: 10,
+    paddingLeft: 5,
     borderColor: '#F09819',
     borderWidth: 1,
-  },
-  // Get current location button container
-  getCurrLocationButton: {
-    alignSelf: 'flex-start',
-    marginTop: '5.29157%',
-    marginLeft: '7.009345%',
-    width: '49.5327%',
-    height: '4.21166%',
-    backgroundColor: '#EEC746',
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   // Notes form
   notesInput: {

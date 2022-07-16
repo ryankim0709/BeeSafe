@@ -1,14 +1,22 @@
 import React from 'react';
-import {View, Text, Dimensions, StyleSheet} from 'react-native';
+import {View, Text, Dimensions, StyleSheet, Image} from 'react-native';
 
-export default function HiveCell() {
+export default function HiveCell(props) {
+  const uri = props.uri;
   return (
     <View style={styles.container}>
-      <View style={styles.imageContainer}></View>
+      <View style={styles.imageContainer}>
+        <Image
+          style={{width: '100%', height: '100%', borderRadius: 10}}
+          source={{uri: uri}}
+        />
+      </View>
       <View style={styles.infoContainer}>
-        <Text style={styles.infoText}>Hive 1</Text>
+        <Text style={styles.infoText}>{props.name}</Text>
         <Text style={styles.infoText}>Last Checked</Text>
-        <Text style={styles.infoText}>July 1, 2021</Text>
+        <Text style={styles.infoText}>
+          {props.month} {props.day}, {props.year}
+        </Text>
       </View>
     </View>
   );

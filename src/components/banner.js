@@ -21,6 +21,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 30,
     borderBottomRightRadius: 30,
     justifyContent: 'center',
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
   },
   bannerText: {
     fontFamily: 'Montserrat',

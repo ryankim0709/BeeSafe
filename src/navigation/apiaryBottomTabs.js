@@ -66,7 +66,6 @@ export default function ApiaryBottomTabs({route}, props) {
       </Tab.Screen>
       <Tab.Screen
         name="Create Hive"
-        component={CreateHive}
         options={{
           tabBarIcon: ({color, size}) => (
             <Feather name="plus-circle" color={color} size={size} />
@@ -79,8 +78,11 @@ export default function ApiaryBottomTabs({route}, props) {
             borderTopRightRadius: 20,
             display: getTabBarVisibility(route),
           },
-        }}
-      />
+        }}>
+        {props => (
+          <CreateHive {...props} data={route.params} route={route.params} />
+        )}
+      </Tab.Screen>
       <Tab.Screen
         name="Edit Apiary"
         component={Settings}
