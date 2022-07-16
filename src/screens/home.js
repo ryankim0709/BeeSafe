@@ -1,6 +1,12 @@
 // UI imports
 import React, {useState, useEffect} from 'react';
-import {View, Text, StyleSheet, ScrollView} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 
 // Auth imports
 import auth from '@react-native-firebase/auth';
@@ -46,11 +52,9 @@ export default function Home({navigation}) {
     var creationTime = new Date(
       auth().currentUser.metadata.creationTime,
     ).getTime(); // User creation time
-    var lastLogIn = new Date(
-      auth().currentUser.metadata.lastSignInTime,
-    ).getTime(); // user last login
+    var currTime = new Date().getTime(); // user last login
 
-    if (lastLogIn - creationTime <= 2000) {
+    if (currTime - creationTime <= 2000) {
       // last log in - current <= 2 seconds
       initUser();
     }
@@ -60,10 +64,11 @@ export default function Home({navigation}) {
 
   async function getData() {
     var dataTemp = [];
+    const userEmail = auth().currentUser.email;
     console.log('Retrieving data');
     firestore()
       .collection('Users')
-      .doc('ryankim0709@gmail.com')
+      .doc(userEmail)
       .collection('Apiaries')
       .get()
       .then(querySnapshot => {
@@ -121,7 +126,18 @@ export default function Home({navigation}) {
           borderRadius: 10,
         }}>
         {data.map((data, key) => (
-          <View style={styles.apiaryContainer} key={key}>
+          <TouchableOpacity
+            style={styles.apiaryContainer}
+            key={key}
+            onPress={() => {
+              navigation.navigate('ApiaryBottomTabs', {
+                name: data['name'],
+                latitude: data['latitude'],
+                longitude: data['longitude'],
+                notes: data['notes'],
+                downloadurl: data['downloadurl'],
+              });
+            }}>
             <ApiaryCell
               name={data['name']}
               latitude={data['latitude']}
@@ -129,11 +145,11 @@ export default function Home({navigation}) {
               notes={data['notes']}
               downloadurl={data['downloadurl']}
             />
-          </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
 
-      {/* Random logout button for testing */}
+      {/* View for padding at the bottom of ScrollView */}
       <View style={{width: '100%', height: '7.1923%', borderRadius: 10}}></View>
     </View>
   );

@@ -54,6 +54,15 @@
 	<string>The microphone is accessed for the first time</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Your message to user when the photo library is accessed for the first time</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Need Locations please</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Need Locations please</string>
+	<key>NSLocationUsageDescription</key>
+	<string>Need Locations please</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Need Locations please</string>
+	
 	<key>UIAppFonts</key>
 	<array>
 		<string>Montserrat-Italic-VariableFont_wght.ttf</string>
@@ -73,6 +82,10 @@
 		<string>SimpleLineIcons.ttf</string>
 		<string>Octicons.ttf</string>
 		<string>Zocial.ttf</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>SplashScreen</string>

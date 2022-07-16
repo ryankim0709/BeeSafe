@@ -6,7 +6,9 @@ import {createStackNavigator} from '@react-navigation/stack';
 
 // Component imports
 import Login from '../screens/login';
-import BottomTabNavigator from './bottomTab';
+import HomeBottomTabs from './homeBottomTabs';
+import ApiaryBottomTabs from './apiaryBottomTabs';
+import BackHome from '../screens/backHome';
 
 // Auth imports
 import auth from '@react-native-firebase/auth';
@@ -42,8 +44,21 @@ export default function StackNavigator() {
       {/* Home screen */}
       <Stack.Screen
         name="HomeBottomTabs"
-        component={BottomTabNavigator}
+        component={HomeBottomTabs}
         options={{headerShown: false, gestureEnabled: false}}
+      />
+
+      {/* Apiary screen */}
+      <Stack.Screen
+        name="ApiaryBottomTabs"
+        component={ApiaryBottomTabs}
+        options={{headerShown: false, gestureEnabled: true}}
+      />
+
+      <Stack.Screen
+        name="BackHome"
+        component={BackHome}
+        options={{headerShown: false, gestureEnabled: true}}
       />
     </Stack.Navigator>
   );

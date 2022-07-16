@@ -31,7 +31,7 @@ import {useFocusEffect} from '@react-navigation/native';
 // Geolocation imports
 import Geolocation from 'react-native-geolocation-service';
 
-export default function CreateApiary({navigation, route}) {
+export default function CreateHive({navigation, route}) {
   // Apiary creation states
   const [name, setName] = useState();
   const [latitude, setLatitude] = useState();
@@ -280,7 +280,10 @@ export default function CreateApiary({navigation, route}) {
             <TouchableOpacity
               style={[styles.createCancelButton, {backgroundColor: '#FFFFFF'}]}
               onPress={() => {
-                navigation.goBack();
+                navigation.navigate('ApiaryBottomTabs', {
+                  screen: 'View Apiary',
+                });
+                console.log('name' + route.name);
               }}>
               <Text style={[styles.createCancelText, {color: '#EEC746'}]}>
                 Cancel
