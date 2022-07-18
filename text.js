@@ -16,7 +16,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import Banner from '../components/banner';
 import Icon from 'react-native-vector-icons/Feather';
-
+import DropDownPicker from 'react-native-dropdown-picker';
 // Image storage imports
 import storage from '@react-native-firebase/storage';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
@@ -31,19 +31,12 @@ import {useFocusEffect} from '@react-navigation/native';
 // Geolocation imports
 import Geolocation from 'react-native-geolocation-service';
 
-import DropDownPicker from 'react-native-dropdown-picker';
 export default function CreateHive({navigation, route}) {
-  const [open, setOpen] = useState(false);
-  const [type, setType] = useState();
-  const [items, setItems] = useState([
-    {label: 'Langstroth', value: 'Langstroth'},
-    {label: 'Top Bar', value: 'Top Bar'},
-    {label: 'Warre', value: 'Warre'},
-  ]);
   // Apiary creation states
   const [name, setName] = useState();
   const [frames, setFrames] = useState();
-  const [notes, setNotes] = useState('');
+  const [type, setType] = useState();
+  const [notes, setNotes] = useState();
   const [image, setImage] = useState(null);
   const [uri, setUri] = useState(image?.assets && image.assets[0].uri);
   const [errorMessage, setErrorMessage] = useState();
@@ -54,6 +47,13 @@ export default function CreateHive({navigation, route}) {
 
   // Setup states
   const [ready, setReady] = useState(false);
+
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(null);
+  const [items, setItems] = useState([
+    {label: 'Apple', value: 'apple'},
+    {label: 'Banana', value: 'banana'},
+  ]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -169,9 +169,7 @@ export default function CreateHive({navigation, route}) {
     } catch (e) {
       console.error(e);
     }
-    if (!notes) {
-      setNotes('');
-    }
+
     // Add apiary to firestore
     var email = await auth().currentUser.email;
     firestore()
@@ -300,20 +298,6 @@ export default function CreateHive({navigation, route}) {
 
           <View style={styles.infoContainer}>
             <Text style={styles.infoText}>Type</Text>
-            <View style={{width: '67%'}}>
-              <DropDownPicker
-                open={open}
-                value={type}
-                items={items}
-                setOpen={setOpen}
-                setValue={setType}
-                setItems={setItems}
-                style={{zIndex: 0, borderColor: '#F09819'}}
-                placeholder={'Select Hive Type'}
-                dropDownContainerStyle={{borderColor: '#F09819'}}
-                textStyle={{fontFamily: 'Montserrat', fontWeight: '500'}}
-              />
-            </View>
           </View>
 
           {/* Notes form */}
@@ -444,7 +428,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderColor: '#F09819',
     paddingLeft: 5,
-    fontFamily: 'Montserrat',
   },
   // Frames and type textinput container
   infoContainer: {
@@ -453,7 +436,8 @@ const styles = StyleSheet.create({
     height: '4.21166%',
     justifyContent: 'space-between',
     flexDirection: 'row',
-    zIndex: 2,
+    zIndex: 0,
+    borderWidth: 1,
   },
   // Information text (next to TextInput)
   infoText: {
@@ -463,7 +447,6 @@ const styles = StyleSheet.create({
     lineHeight: 21.94,
     justifyContent: 'center',
     alignSelf: 'center',
-    width: '20%',
   },
   // Information fomr
   infoInput: {
@@ -482,7 +465,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
     alignSelf: 'flex-start',
     marginLeft: '6.542%',
-    marginTop: '10%',
+    marginTop: '5.29157%',
     fontFamily: 'Montserrat',
     paddingLeft: '4.297%',
     paddingTop: '3.9071%',
