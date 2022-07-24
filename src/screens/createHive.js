@@ -345,6 +345,9 @@ export default function CreateHive({navigation, route}) {
               onPress={() => {
                 navigation.navigate('ApiaryBottomTabs', {
                   screen: 'View Apiary',
+                  name: route['name'],
+                  latitude: route['latitude'],
+                  longitude: route['longitude'],
                 });
               }}>
               <Text style={[styles.createCancelText, {color: '#EEC746'}]}>

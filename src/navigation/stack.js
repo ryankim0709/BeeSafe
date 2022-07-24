@@ -9,6 +9,7 @@ import Login from '../screens/login';
 import HomeBottomTabs from './homeBottomTabs';
 import ApiaryBottomTabs from './apiaryBottomTabs';
 import BackHome from '../screens/backHome';
+import HiveCheck from '../screens/hiveCheck';
 
 // Auth imports
 import auth from '@react-native-firebase/auth';
@@ -58,6 +59,12 @@ export default function StackNavigator() {
       <Stack.Screen
         name="BackHome"
         component={BackHome}
+        options={{headerShown: false, gestureEnabled: true}}
+      />
+
+      <Stack.Screen
+        name="HiveCheck"
+        component={HiveCheck}
         options={{headerShown: false, gestureEnabled: true}}
       />
     </Stack.Navigator>

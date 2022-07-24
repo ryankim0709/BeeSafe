@@ -13,7 +13,7 @@ export default function HiveCell(props) {
       </View>
       <View style={styles.infoContainer}>
         <Text style={styles.infoText}>{props.name}</Text>
-        <Text style={styles.infoText}>Last Checked</Text>
+        <Text style={styles.infoText}>{props.type}</Text>
         <Text style={styles.infoText}>
           {props.month} {props.day}, {props.year}
         </Text>

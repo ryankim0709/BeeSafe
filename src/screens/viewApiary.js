@@ -89,13 +89,24 @@ export default function ViewApiary({route, navigation}) {
 
       <ScrollView style={styles.hiveContainer}>
         {data.map((data, key) => (
-          <TouchableOpacity style={styles.hiveCellContainer} key={key}>
+          <TouchableOpacity
+            style={styles.hiveCellContainer}
+            key={key}
+            onPress={() => {
+              console.log(route);
+              var name = route['name'];
+              navigation.navigate('HiveCheck', {
+                hiveName: data['name'],
+                apirayName: name,
+              });
+            }}>
             <HiveCell
               name={data['name']}
               uri={data['downloadurl']}
               month={data['month']}
               day={data['day']}
               year={data['year']}
+              type={data['type']}
             />
           </TouchableOpacity>
         ))}

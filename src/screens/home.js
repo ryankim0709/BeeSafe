@@ -58,10 +58,26 @@ export default function Home({navigation}) {
       // last log in - current <= 2 seconds
       initUser();
     }
-    getData();
-    return subscriber; // unsubscribe on unmount
+
+    const subscriber2 = firestore()
+      .collection('Users')
+      .doc(auth().currentUser.email)
+      .collection('Apiaries')
+      .onSnapshot(logData, onError);
+    //getData();
+    return () => {
+      subscriber;
+      subscriber2;
+    }; // unsubscribe on unmount
   }, []);
 
+  function logData(QuerySnapshot) {
+    var dataTemp = [];
+    QuerySnapshot.forEach(doc => {
+      dataTemp.push(doc.data());
+    });
+    setData(dataTemp);
+  }
   async function getData() {
     var dataTemp = [];
     const userEmail = auth().currentUser.email;
@@ -101,6 +117,10 @@ export default function Home({navigation}) {
       });
   }
 
+  function onError(error) {
+    console.error(error);
+  }
+
   if (initializing) return null;
   if (!data) return null;
   return (
@@ -126,26 +146,16 @@ export default function Home({navigation}) {
           borderRadius: 10,
         }}>
         {data.map((data, key) => (
-          <TouchableOpacity
-            style={styles.apiaryContainer}
-            key={key}
-            onPress={() => {
-              navigation.navigate('ApiaryBottomTabs', {
-                name: data['name'],
-                latitude: data['latitude'],
-                longitude: data['longitude'],
-                notes: data['notes'],
-                downloadurl: data['downloadurl'],
-              });
-            }}>
+          <View style={styles.apiaryContainer} key={key}>
             <ApiaryCell
               name={data['name']}
               latitude={data['latitude']}
               longitude={data['longitude']}
               notes={data['notes']}
               downloadurl={data['downloadurl']}
+              navigation={navigation}
             />
-          </TouchableOpacity>
+          </View>
         ))}
       </ScrollView>
 
