@@ -25,6 +25,7 @@ export default function HomeBottomTabs({route}) {
         tabBarInactiveTintColor: 'black',
         tabBarActiveTintColor: '#F5F5F5',
       }}>
+      {/* Home Screen. Where Apiaries are displayed */}
       <Tab.Screen
         name="Home"
         component={Home}
@@ -42,6 +43,7 @@ export default function HomeBottomTabs({route}) {
           },
         }}
       />
+      {/* Create Apiary Screen */}
       <Tab.Screen
         name="Create Apiary"
         component={CreateApiary}
@@ -59,6 +61,7 @@ export default function HomeBottomTabs({route}) {
           },
         }}
       />
+      {/* Settings Screen */}
       <Tab.Screen
         name="Settings"
         component={Settings}
@@ -83,9 +86,7 @@ export default function HomeBottomTabs({route}) {
 const getTabBarVisibility = route => {
   // Get route name
   const routeName = getFocusedRouteNameFromRoute(route) ?? 'Home';
-  console.log(routeName);
-
   // Is bottom tab navigator visible or not
-  if (routeName == 'Home' || routeName == 'Settings') return 'flex';
-  if (routeName == 'Create Apiary') return 'none';
+  if (routeName == 'Create Apiary') return 'none'; // Not visible for all screens except Create Apiary
+  return 'flex'
 };

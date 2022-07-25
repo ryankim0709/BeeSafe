@@ -18,21 +18,6 @@ import auth from '@react-native-firebase/auth';
 const Stack = createStackNavigator();
 
 export default function StackNavigator() {
-  // Auth states
-  const [initializing, setInitializing] = useState(true);
-
-  // Auth state change
-  function onAuthStateChanged(user) {
-    if (initializing) setInitializing(false);
-  }
-  useEffect(() => {
-    // Auth state change
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-    return subscriber; // unsubscribe on unmount
-  }, []);
-
-  if (initializing) return null;
-
   return (
     <Stack.Navigator initialRouteName={'Login'}>
       {/* Login Screen */}
@@ -56,12 +41,14 @@ export default function StackNavigator() {
         options={{headerShown: false, gestureEnabled: true}}
       />
 
+      {/* Dummy screen to navigate back to HomeBttomTabs */}
       <Stack.Screen
         name="BackHome"
         component={BackHome}
         options={{headerShown: false, gestureEnabled: true}}
       />
 
+      {/* Screen for checking hives */}
       <Stack.Screen
         name="HiveCheck"
         component={HiveCheck}

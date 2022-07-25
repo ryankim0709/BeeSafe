@@ -28,28 +28,25 @@ import firestore from '@react-native-firebase/firestore';
 // Navigation imports
 import {useFocusEffect} from '@react-navigation/native';
 
-// Geolocation imports
-import Geolocation from 'react-native-geolocation-service';
-
 import DropDownPicker from 'react-native-dropdown-picker';
+
 export default function CreateHive({navigation, route}) {
+  // Dropdown states
   const [open, setOpen] = useState(false);
-  const [type, setType] = useState();
-  const [items, setItems] = useState([
+  const [hiveTypes, setHiveTypes] = useState([
     {label: 'Langstroth', value: 'Langstroth'},
     {label: 'Top Bar', value: 'Top Bar'},
     {label: 'Warre', value: 'Warre'},
   ]);
-  // Apiary creation states
+
+  // Hive creation states
   const [name, setName] = useState();
   const [frames, setFrames] = useState();
+  const [type, setType] = useState();
   const [notes, setNotes] = useState('');
   const [image, setImage] = useState(null);
   const [uri, setUri] = useState(image?.assets && image.assets[0].uri);
   const [errorMessage, setErrorMessage] = useState();
-
-  // Auth states
-  const [user, setUser] = useState();
   const [modalIsVisible, setModalIsVisible] = useState(false);
 
   // Setup states
@@ -67,20 +64,14 @@ export default function CreateHive({navigation, route}) {
         setNotes();
         setImage(null);
         setUri(null);
+        setModalIsVisible(false);
       };
     }, []),
   );
 
-  // Auth state change
-  async function onAuthStateChanged(user) {
-    await setUser(user);
-  }
-
   useEffect(() => {
     // Image URI for display
     setUri(image?.assets && image.assets[0].uri);
-    // Auth set change
-    auth().onAuthStateChanged(onAuthStateChanged);
   }, [image]);
 
   async function selectImage() {
@@ -107,6 +98,7 @@ export default function CreateHive({navigation, route}) {
   }
 
   const uploadHive = async () => {
+    // Get the day, month, & year
     var months = [
       'Jan',
       'Feb',
@@ -125,7 +117,6 @@ export default function CreateHive({navigation, route}) {
     var month = String(months[today.getMonth()]);
     var year = String(today.getFullYear());
 
-    const apiaryName = route['name'];
     // Error handling
     if (!uri || !image) {
       setModalIsVisible(true);
@@ -147,6 +138,9 @@ export default function CreateHive({navigation, route}) {
       setErrorMessage('Please add the type of your hive');
       return;
     }
+    if (!notes) {
+      setNotes('');
+    }
 
     // Image upload
     const filename = uri.substring(uri.lastIndexOf('/') + 1);
@@ -160,6 +154,7 @@ export default function CreateHive({navigation, route}) {
     setImage(null);
     // Image upload complete
 
+    // Get download link
     const downloadlink = (
       await storage().ref(filename).getDownloadURL()
     ).toString();
@@ -173,12 +168,11 @@ export default function CreateHive({navigation, route}) {
       setNotes('');
     }
     // Add apiary to firestore
-    var email = await auth().currentUser.email;
     firestore()
       .collection('Users')
-      .doc(email)
+      .doc(auth().currentUser.email)
       .collection('Apiaries')
-      .doc(apiaryName)
+      .doc(route['name'])
       .collection('Hives')
       .doc(name)
       .set({
@@ -192,13 +186,6 @@ export default function CreateHive({navigation, route}) {
         year: year,
       })
       .then(() => {
-        console.log('Hive added!');
-        setName();
-        setFrames();
-        setType();
-        setNotes();
-        setImage(null);
-        setUri(null);
         navigation.navigate('ApiaryBottomTabs', {
           screen: 'View Apiary',
         });
@@ -262,6 +249,7 @@ export default function CreateHive({navigation, route}) {
             }}
           />
 
+          {/* Frame choice buttons */}
           <View style={styles.infoContainer}>
             <Text style={styles.infoText}>Frames</Text>
             <TouchableOpacity
@@ -298,16 +286,17 @@ export default function CreateHive({navigation, route}) {
             </TouchableOpacity>
           </View>
 
+          {/* Hive type dropdown */}
           <View style={styles.infoContainer}>
             <Text style={styles.infoText}>Type</Text>
             <View style={{width: '67%'}}>
               <DropDownPicker
                 open={open}
                 value={type}
-                items={items}
+                items={hiveTypes}
                 setOpen={setOpen}
                 setValue={setType}
-                setItems={setItems}
+                setItems={setHiveTypes}
                 style={{zIndex: 0, borderColor: '#F09819'}}
                 placeholder={'Select Hive Type'}
                 dropDownContainerStyle={{borderColor: '#F09819'}}

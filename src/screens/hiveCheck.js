@@ -22,8 +22,6 @@ import firestore from '@react-native-firebase/firestore';
 // Navigation imports
 import {useFocusEffect} from '@react-navigation/native';
 
-// Geolocation imports
-
 export default function CreateHive({navigation, route}) {
   // Apiary creation states
   const [image, setImage] = useState(null);

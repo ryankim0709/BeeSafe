@@ -32,15 +32,10 @@ async function onGoogleButtonPress() {
 }
 
 export default function Login({navigation}) {
-  // Authentication states
-  const [initializing, setInitializing] = useState(true);
-  const [user, setUser] = useState();
 
   // Auth state change handler
   function onAuthStateChanged(user) {
-    setUser(user);
     if (user) navigation.navigate('HomeBottomTabs');
-    if (initializing) setInitializing(false);
   }
 
   useEffect(() => {
@@ -48,10 +43,6 @@ export default function Login({navigation}) {
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber; // unsubscribe on unmount
   }, []);
-
-  // If initializing app
-  if (initializing) return null;
-  if (user) return null;
 
   return (
     // Container

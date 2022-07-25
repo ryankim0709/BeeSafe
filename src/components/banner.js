@@ -9,12 +9,14 @@ export default function Banner(props) {
       colors={['#F09819', '#EDDE5D']}
       start={{x: 0, y: 0}}
       end={{x: 1, y: 0}}>
+      {/* Banner Name */}
       <Text style={styles.bannerText}>{props.text}</Text>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  // Main container
   container: {
     flex: 1,
     backgroundColor: 'white',
@@ -24,6 +26,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 10,
     borderBottomLeftRadius: 10,
   },
+  // Banner text
   bannerText: {
     fontFamily: 'Montserrat',
     fontWeight: '600',

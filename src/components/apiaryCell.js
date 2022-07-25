@@ -14,6 +14,17 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
 export default function ApiaryCell(props) {
+  async function deleteApiary() {
+    firestore()
+      .collection('Users')
+      .doc(auth().currentUser.email)
+      .collection('Apiaries')
+      .doc(props.name)
+      .delete()
+      .then(() => {
+        console.log('Apiary Deleted');
+      });
+  }
   const uri = props.downloadurl;
   return (
     // Container
@@ -44,20 +55,13 @@ export default function ApiaryCell(props) {
               {props.latitude} {props.longitude}
             </Text>
           </View>
+          {/* Apiary Deletion */}
           <TouchableOpacity
             style={{justifyContent: 'center', alignItems: 'center'}}
             onPress={() => {
-              const email = auth().currentUser.email;
-              firestore()
-                .collection('Users')
-                .doc(email)
-                .collection('Apiaries')
-                .doc(props.name)
-                .delete()
-                .then(() => {
-                  console.log('Apiary Deleted');
-                });
+              deleteApiary();
             }}>
+            {/* Trash bin icon */}
             <Feather name="trash-2" size={20} />
           </TouchableOpacity>
         </View>

@@ -1,12 +1,6 @@
 // UI imports
 import React, {useState, useEffect} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import {View, Text, StyleSheet, ScrollView} from 'react-native';
 
 // Auth imports
 import auth from '@react-native-firebase/auth';
@@ -20,17 +14,13 @@ import {useFocusEffect} from '@react-navigation/native';
 
 export default function Home({navigation}) {
   // Auth states
-  const [initializing, setInitializing] = useState(true);
-  const [user, setUser] = useState();
   const [data, setData] = useState([]);
 
   // Auth state change
   async function onAuthStateChanged(user) {
-    await setUser(user);
     if (!user) {
       navigation.navigate('Login');
     }
-    if (initializing) setInitializing(false);
   }
 
   useFocusEffect(
@@ -38,38 +28,44 @@ export default function Home({navigation}) {
       getData();
 
       return () => {
-        console.log('Unfocused. Clean up here');
         setData();
       };
     }, []),
   );
 
   useEffect(() => {
+    getData();
+
     // Auth state change
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+    const authChange = auth().onAuthStateChanged(onAuthStateChanged);
 
     // Create new user
     var creationTime = new Date(
       auth().currentUser.metadata.creationTime,
     ).getTime(); // User creation time
-    var currTime = new Date().getTime(); // user last login
+    var currTime = new Date().getTime(); // User last login
 
     if (currTime - creationTime <= 2000) {
       // last log in - current <= 2 seconds
       initUser();
     }
 
-    const subscriber2 = firestore()
+    // If the data changes, get the data again
+    const dataListener = firestore()
       .collection('Users')
       .doc(auth().currentUser.email)
       .collection('Apiaries')
       .onSnapshot(logData, onError);
     //getData();
     return () => {
-      subscriber;
-      subscriber2;
+      authChange;
+      dataListener;
     }; // unsubscribe on unmount
   }, []);
+  
+  function onError(error) {
+    console.error(error);
+  }
 
   function logData(QuerySnapshot) {
     var dataTemp = [];
@@ -78,13 +74,13 @@ export default function Home({navigation}) {
     });
     setData(dataTemp);
   }
+
   async function getData() {
     var dataTemp = [];
-    const userEmail = auth().currentUser.email;
-    console.log('Retrieving data');
+    // Getting data
     firestore()
       .collection('Users')
-      .doc(userEmail)
+      .doc(auth().currentUser.email)
       .collection('Apiaries')
       .get()
       .then(querySnapshot => {
@@ -96,32 +92,25 @@ export default function Home({navigation}) {
         setData(dataTemp);
       });
   }
+
   async function initUser() {
-    console.log('NEW USER');
     // using auth().currentUser is faster than user.
     var displayname = auth().currentUser.displayName;
     var email = auth().currentUser.email;
-
-    // console.log(auth().currentUser);
 
     // Initialize new user with email and name
     firestore()
       .collection(`Users`)
       .doc(email)
       .set({
-        email: {email},
-        name: {displayname},
+        email: email,
+        name: displayname,
       })
       .then(() => {
         console.log('User basics initialized!');
       });
   }
 
-  function onError(error) {
-    console.error(error);
-  }
-
-  if (initializing) return null;
   if (!data) return null;
   return (
     // Container
@@ -137,8 +126,6 @@ export default function Home({navigation}) {
       </View>
 
       {/* Apiary list */}
-      {/* Use ScrollView for just the Apiaries or the whole screen? */}
-
       <ScrollView
         style={{
           width: '100%',

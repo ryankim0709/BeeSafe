@@ -19,7 +19,7 @@ const Tab = createBottomTabNavigator();
 // screenOptions: {tabBarShowLabel: false, headerShown: false tabBarStyle:{}}
 // tabBarBadge
 
-export default function ApiaryBottomTabs({route}, props) {
+export default function ApiaryBottomTabs({route}) {
   return (
     <Tab.Navigator
       initialRouteName="View Apiary"
@@ -28,6 +28,7 @@ export default function ApiaryBottomTabs({route}, props) {
         tabBarInactiveTintColor: 'black',
         tabBarActiveTintColor: '#F5F5F5',
       }}>
+      {/* Back to home screen */}
       <Tab.Screen
         name="Home"
         component={BackHome}
@@ -45,6 +46,8 @@ export default function ApiaryBottomTabs({route}, props) {
           },
         }}
       />
+
+      {/* Home page. Where the hives are displayed */}
       <Tab.Screen
         name="View Apiary"
         options={{
@@ -64,6 +67,8 @@ export default function ApiaryBottomTabs({route}, props) {
           <ViewApiary {...props} data={route.params} route={route.params} />
         )}
       </Tab.Screen>
+
+      {/* Hive Creationg */}
       <Tab.Screen
         name="Create Hive"
         options={{
@@ -83,6 +88,7 @@ export default function ApiaryBottomTabs({route}, props) {
           <CreateHive {...props} data={route.params} route={route.params} />
         )}
       </Tab.Screen>
+      {/* Apiary Edits */}
       <Tab.Screen
         name="Edit Apiary"
         component={Settings}
@@ -107,9 +113,7 @@ export default function ApiaryBottomTabs({route}, props) {
 const getTabBarVisibility = route => {
   // Get route name
   const routeName = getFocusedRouteNameFromRoute(route) ?? 'Home';
-  console.log(routeName);
-
   // Is bottom tab navigator visible or not
-  if (routeName == 'Home' || routeName == 'Settings') return 'flex';
-  if (routeName == 'Create Hive') return 'none';
+  if (routeName == 'Create Hive') return 'none'; // Not visible for all screens except Create Apiary
+  return 'flex';
 };

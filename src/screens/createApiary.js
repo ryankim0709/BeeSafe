@@ -28,21 +28,15 @@ import firestore from '@react-native-firebase/firestore';
 // Navigation imports
 import {useFocusEffect} from '@react-navigation/native';
 
-// Geolocation imports
-import Geolocation from 'react-native-geolocation-service';
-
-export default function CreateApiary({navigation, route}) {
+export default function CreateApiary({navigation}) {
   // Apiary creation states
   const [name, setName] = useState();
   const [latitude, setLatitude] = useState();
   const [longitude, setLongitude] = useState();
-  const [notes, setNotes] = useState();
+  const [notes, setNotes] = useState('');
   const [image, setImage] = useState(null);
   const [uri, setUri] = useState(image?.assets && image.assets[0].uri);
   const [errorMessage, setErrorMessage] = useState();
-
-  // Auth states
-  const [user, setUser] = useState();
   const [modalIsVisible, setModalIsVisible] = useState(false);
 
   // Setup states
@@ -54,26 +48,20 @@ export default function CreateApiary({navigation, route}) {
       setReady(true);
       return () => {
         setReady(false);
+        setModalIsVisible(false);
         setName();
         setLatitude();
         setLongitude();
-        setNotes();
+        setNotes('');
         setImage(null);
         setUri(null);
       };
     }, []),
   );
 
-  // Auth state change
-  async function onAuthStateChanged(user) {
-    await setUser(user);
-  }
-
   useEffect(() => {
-    // Image URI for display
+    // Image URI for display every time image changes
     setUri(image?.assets && image.assets[0].uri);
-    // Auth set change
-    auth().onAuthStateChanged(onAuthStateChanged);
   }, [image]);
 
   async function selectImage() {
@@ -116,6 +104,10 @@ export default function CreateApiary({navigation, route}) {
       setErrorMessage('Please add the latitude/longitude of your apiary');
       return;
     }
+    if (!notes) {
+      // If there are no notes, then notes should be empty
+      await setNotes('');
+    }
 
     // Image upload
     const filename = uri.substring(uri.lastIndexOf('/') + 1);
@@ -129,21 +121,20 @@ export default function CreateApiary({navigation, route}) {
     setImage(null);
     // Image upload complete
 
+    // Get image download link
     const downloadlink = (
       await storage().ref(filename).getDownloadURL()
     ).toString();
     try {
       await downloadlink;
-      console.log(downloadlink);
     } catch (e) {
       console.error(e);
     }
 
     // Add apiary to firestore
-    var email = await auth().currentUser.email;
     firestore()
       .collection('Users')
-      .doc(email)
+      .doc(auth().currentUser.email)
       .collection('Apiaries')
       .doc(name)
       .set({
@@ -154,13 +145,6 @@ export default function CreateApiary({navigation, route}) {
         downloadurl: downloadlink,
       })
       .then(() => {
-        console.log('Apiary added!');
-        setName();
-        setLatitude();
-        setLongitude();
-        setNotes();
-        setImage(null);
-        setUri(null);
         navigation.goBack();
       })
       .catch(e => {

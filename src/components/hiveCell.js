@@ -1,3 +1,4 @@
+// UI imports
 import React from 'react';
 import {View, Text, Dimensions, StyleSheet, Image} from 'react-native';
 
@@ -5,12 +6,14 @@ export default function HiveCell(props) {
   const uri = props.uri;
   return (
     <View style={styles.container}>
+      {/* Hive cover image */}
       <View style={styles.imageContainer}>
         <Image
           style={{width: '100%', height: '100%', borderRadius: 10}}
           source={{uri: uri}}
         />
       </View>
+      {/* Hive extra info */}
       <View style={styles.infoContainer}>
         <Text style={styles.infoText}>{props.name}</Text>
         <Text style={styles.infoText}>{props.type}</Text>
@@ -23,6 +26,7 @@ export default function HiveCell(props) {
 }
 
 const styles = StyleSheet.create({
+  // Main container
   container: {
     width: '100%',
     width: '100%',
@@ -30,17 +34,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-evenly',
   },
+  // Cover image container
   imageContainer: {
     width: '48.1308%',
     height: '100%',
     backgroundColor: '#F5F5F5',
     borderRadius: 10,
   },
+  // Extra info container
   infoContainer: {
     width: '38.785%',
     height: '100%',
     justifyContent: 'center',
   },
+  // Text style
   infoText: {
     fontFamily: 'Montserrat',
     fontWeight: '600',
