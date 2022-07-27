@@ -99,16 +99,16 @@ export default function CreateHive({navigation, route}) {
     var month = String(months[today.getMonth()]);
     var year = String(today.getFullYear());
 
-    console.log(route.params);
     var email = auth().currentUser.email;
-    console.log(route['params']['apirayName']);
+    var apiaryName = route['params']['apirayName'];
+    var hiveName = route['params']['hiveName'];
     firestore()
       .collection('Users')
       .doc(email)
       .collection('Apiaries')
-      .doc(route['params']['apirayName'])
+      .doc(apiaryName)
       .collection('Hives')
-      .doc(route['params']['hiveName'])
+      .doc(hiveName)
       .update({
         month: month,
         year: year,

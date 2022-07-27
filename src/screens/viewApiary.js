@@ -126,9 +126,10 @@ export default function ViewApiary({route, navigation}) {
               {
                 /* Navigate to hive check on press */
               }
+              var apiaryName = route['name'];
               navigation.navigate('HiveCheck', {
                 hiveName: data['name'],
-                apirayName: route['name'],
+                apirayName: apiaryName,
               });
             }}>
             <HiveCell

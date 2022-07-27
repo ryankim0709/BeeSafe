@@ -11,6 +11,7 @@ import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
 import Home from '../screens/home.js';
 import CreateApiary from '../screens/createApiary.js';
 import Settings from '../screens/settings.js';
+import WorldView from '../screens/worldView.js';
 
 const Tab = createBottomTabNavigator();
 
@@ -61,6 +62,24 @@ export default function HomeBottomTabs({route}) {
           },
         }}
       />
+      {/* Create Apiary Screen */}
+      <Tab.Screen
+        name="World View"
+        component={WorldView}
+        options={{
+          tabBarIcon: ({color, size}) => (
+            <Feather name="globe" color={color} size={size} />
+          ),
+          tabBarStyle: {
+            backgroundColor: '#F09819',
+            position: 'absolute',
+            overflow: 'hidden',
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            display: getTabBarVisibility(route),
+          },
+        }}
+      />
       {/* Settings Screen */}
       <Tab.Screen
         name="Settings"
@@ -88,5 +107,5 @@ const getTabBarVisibility = route => {
   const routeName = getFocusedRouteNameFromRoute(route) ?? 'Home';
   // Is bottom tab navigator visible or not
   if (routeName == 'Create Apiary') return 'none'; // Not visible for all screens except Create Apiary
-  return 'flex'
+  return 'flex';
 };

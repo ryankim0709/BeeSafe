@@ -7,7 +7,6 @@ import {
   Dimensions,
   Image,
   TouchableOpacity,
-  Touchable,
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import firestore from '@react-native-firebase/firestore';
@@ -40,6 +39,8 @@ export default function ApiaryCell(props) {
               longitude: props.longitude,
               notes: props.notes,
               downloadurl: props.downloadurl,
+              city: props.city,
+              country: props.country,
             });
           }}>
           {/* Image goes here*/}
@@ -51,9 +52,16 @@ export default function ApiaryCell(props) {
           {/* Apiary information */}
           <View>
             <Text style={styles.infoText}>{props.name}</Text>
-            <Text style={styles.infoText}>
-              {props.latitude} {props.longitude}
-            </Text>
+            {props.city === '' && (
+              <Text style={styles.infoText}>
+                {props.latitude} {props.longitude}
+              </Text>
+            )}
+            {props.city !== '' && (
+              <Text style={styles.infoText}>
+                {props.city} {props.country}
+              </Text>
+            )}
           </View>
           {/* Apiary Deletion */}
           <TouchableOpacity

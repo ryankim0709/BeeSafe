@@ -12,6 +12,8 @@ import {
   TouchableWithoutFeedback,
   Modal,
   Platform,
+  Alert,
+  Linking,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Banner from '../components/banner';
@@ -28,6 +30,19 @@ import firestore from '@react-native-firebase/firestore';
 // Navigation imports
 import {useFocusEffect} from '@react-navigation/native';
 
+// Location Imports
+import RNLocation from 'react-native-location';
+
+RNLocation.configure({
+  distanceFilter: 0,
+  desiredAccuracy: {
+    ios: 'best',
+    android: 'balancedPowerAccuracy',
+  },
+});
+
+const ApiKey = 'AIzaSyB-kx_p7omVLQAmEkipUxTuvu-qYfvLl5c';
+
 export default function CreateApiary({navigation}) {
   // Apiary creation states
   const [name, setName] = useState();
@@ -36,6 +51,8 @@ export default function CreateApiary({navigation}) {
   const [notes, setNotes] = useState('');
   const [image, setImage] = useState(null);
   const [uri, setUri] = useState(image?.assets && image.assets[0].uri);
+  const [city, setCity] = useState('');
+  const [country, setCountry] = useState('');
   const [errorMessage, setErrorMessage] = useState();
   const [modalIsVisible, setModalIsVisible] = useState(false);
 
@@ -53,6 +70,8 @@ export default function CreateApiary({navigation}) {
         setLatitude();
         setLongitude();
         setNotes('');
+        setCity('');
+        setCountry('');
         setImage(null);
         setUri(null);
       };
@@ -87,7 +106,7 @@ export default function CreateApiary({navigation}) {
     launchCamera(options, setImage);
   }
 
-  const uploadApiary = async () => {
+  async function uploadApiary() {
     // Error handling
     if (!uri || !image) {
       setModalIsVisible(true);
@@ -143,6 +162,8 @@ export default function CreateApiary({navigation}) {
         longitude: longitude,
         notes: notes,
         downloadurl: downloadlink,
+        city: city,
+        country: country,
       })
       .then(() => {
         navigation.goBack();
@@ -151,7 +172,91 @@ export default function CreateApiary({navigation}) {
         console.log(e);
       });
     // Apiary addition complete
-  };
+  }
+
+  async function getLocation() {
+    let permission = await RNLocation.checkPermission({
+      ios: 'whenInUse', // or 'always'
+      android: {
+        detail: 'coarse', // or 'fine'
+      },
+    });
+    let location;
+    if (!permission) {
+      permission = await RNLocation.requestPermission({
+        ios: 'whenInUse',
+        android: {
+          detail: 'coarse',
+          rationale: {
+            title: 'We need to access your location',
+            message: 'We use your location to show where you are on the map',
+            buttonPositive: 'OK',
+            buttonNegative: 'Cancel',
+          },
+        },
+      });
+
+      if (permission == false) {
+        Alert.alert(
+          'Location Preferences',
+          'Please allow location permissions for automatic latitude/longitude',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {text: 'OK', onPress: () => Linking.openSettings()},
+          ],
+        );
+      }
+    } else {
+      location = await RNLocation.getLatestLocation({timeout: 100});
+      console.log(location);
+      var lat = parseFloat(location['latitude']).toFixed(4).toString();
+      var lon = parseFloat(location['longitude']).toFixed(4).toString();
+      setLatitude(lat);
+      setLongitude(lon);
+
+      return new Promise((resolve, reject) => {
+        fetch(
+          'https://maps.googleapis.com/maps/api/geocode/json?address=' +
+            lat +
+            ',' +
+            lon +
+            '&key=' +
+            ApiKey,
+        )
+          .then(response => response.json())
+          .then(responseJson => {
+            if (responseJson.status === 'OK') {
+              var locData = responseJson.results[0]['address_components'];
+
+              for (const [id, val] of Object.entries(locData)) {
+                var long_name = val['long_name'];
+                var short_name = val['short_name'];
+                var types = val['types'];
+
+                if (
+                  types.includes('locality') ||
+                  types.includes('sublocality')
+                ) {
+                  console.log(long_name);
+                  setCity(long_name);
+                }
+                if (types.includes('country')) {
+                  setCountry(short_name);
+                }
+              }
+            } else {
+              reject('Not found');
+            }
+          })
+          .catch(error => {
+            console.log(error);
+          });
+      });
+    }
+  }
 
   if (!ready) return null;
   return (
@@ -232,7 +337,7 @@ export default function CreateApiary({navigation}) {
           <TouchableOpacity
             style={styles.getCurrLocationButton}
             onPress={() => {
-              getCurrLocation();
+              getLocation();
             }}>
             <Text style={styles.getCurrLocationText}>Get Current Location</Text>
           </TouchableOpacity>
@@ -363,6 +468,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderColor: '#F09819',
     paddingLeft: 5,
+    fontFamily: 'Montserrat',
   },
   // Coordinates form container
   coordContainer: {
@@ -389,6 +495,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderColor: '#F09819',
     borderWidth: 1,
+    fontFamily: 'Montserrat',
   },
   // Get current location button container
   getCurrLocationButton: {
