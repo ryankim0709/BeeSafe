@@ -54,14 +54,13 @@
 	<string>The microphone is accessed for the first time</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Your message to user when the photo library is accessed for the first time</string>
+	
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Need Locations please</string>
+	<string>This is the plist item for NSLocationWhenInUseUsageDescription</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Need Locations please</string>
-	<key>NSLocationUsageDescription</key>
-	<string>Need Locations please</string>
+	<string>This is the plist item for NSLocationAlwaysAndWhenInUseUsageDescription</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Need Locations please</string>
+	<string>This is the plist item for NSLocationAlwaysUsageDescription</string>
 	
 	<key>UIAppFonts</key>
 	<array>

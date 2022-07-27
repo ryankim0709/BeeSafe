@@ -62,7 +62,7 @@ export default function Home({navigation}) {
       dataListener;
     }; // unsubscribe on unmount
   }, []);
-  
+
   function onError(error) {
     console.error(error);
   }
@@ -141,6 +141,8 @@ export default function Home({navigation}) {
               notes={data['notes']}
               downloadurl={data['downloadurl']}
               navigation={navigation}
+              city={data['city']}
+              country={data['country']}
             />
           </View>
         ))}
