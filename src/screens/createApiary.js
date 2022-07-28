@@ -151,11 +151,40 @@ export default function CreateApiary({navigation}) {
     }
 
     // Add apiary to firestore
-    firestore()
+    const apiaryRoute = firestore()
       .collection('Users')
       .doc(auth().currentUser.email)
       .collection('Apiaries')
-      .doc(name)
+      .doc(name);
+
+    apiaryRoute.get().then(docSnapshot => {
+      if (docSnapshot.exists) {
+        Alert.alert(
+          'Apiary already exists',
+          'Would you like to overwrite your other Apiary?',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+              onPress: () => navigation.goBack(),
+            },
+            {text: 'OK', onPress: () => pushData(downloadlink)},
+          ],
+        );
+      } else {
+        pushData(downloadlink);
+      }
+    });
+    // Apiary addition complete
+  }
+
+  async function pushData(downloadlink) {
+    const apiaryPath = firestore()
+      .collection('Users')
+      .doc(auth().currentUser.email)
+      .collection('Apiaries')
+      .doc(name);
+    apiaryPath
       .set({
         name: name,
         latitude: latitude,
@@ -166,12 +195,26 @@ export default function CreateApiary({navigation}) {
         country: country,
       })
       .then(() => {
+        apiaryPath
+          .collection('Hives')
+          .get()
+          .then(querySnapshot => {
+            querySnapshot.docs.map(item => {
+              var name = item.data()['name'];
+              apiaryPath
+                .collection('Hives')
+                .doc(name)
+                .delete()
+                .then(() => {
+                  console.log('Hive deleted');
+                });
+            });
+          });
         navigation.goBack();
       })
       .catch(e => {
         console.log(e);
       });
-    // Apiary addition complete
   }
 
   async function getLocation() {
