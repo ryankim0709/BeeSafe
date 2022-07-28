@@ -48,6 +48,8 @@ export default function CreateHive({navigation, route}) {
   const [uri, setUri] = useState(image?.assets && image.assets[0].uri);
   const [errorMessage, setErrorMessage] = useState();
   const [modalIsVisible, setModalIsVisible] = useState(false);
+  const [lat, setLat] = useState(0);
+  const [lon, setLon] = useState(0);
 
   // Setup states
   const [ready, setReady] = useState(false);
@@ -70,6 +72,8 @@ export default function CreateHive({navigation, route}) {
   );
 
   useEffect(() => {
+    setLat(route['latitude']);
+    setLon(route['longitude']);
     // Image URI for display
     setUri(image?.assets && image.assets[0].uri);
   }, [image]);
@@ -184,6 +188,8 @@ export default function CreateHive({navigation, route}) {
         day: day,
         month: month,
         year: year,
+        latitude: lat,
+        longitude: lon,
       })
       .then(() => {
         navigation.navigate('ApiaryBottomTabs', {
