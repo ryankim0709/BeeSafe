@@ -1,6 +1,7 @@
 // UI imports
 import React, {useState, useEffect} from 'react';
 import {View, Text, StyleSheet, ScrollView} from 'react-native';
+import {SearchBar} from 'react-native-elements';
 
 // Auth imports
 import auth from '@react-native-firebase/auth';
@@ -116,9 +117,16 @@ export default function Home({navigation}) {
     // Container
     <View style={styles.container}>
       {/* Seach Bar */}
-      <View style={styles.barContainer}>
-        <Text>Search Bar should be here</Text>
-      </View>
+      <SearchBar
+        placeholder="Apiary"
+        platform="ios"
+        containerStyle={{
+          width: '85.2893%',
+          marginTop: '6.47%',
+          backgroundColor: 'white',
+          borderRadius: 5,
+        }}
+      />
 
       {/* Apiary header text */}
       <View style={styles.headerContainer}>
@@ -163,10 +171,10 @@ const styles = StyleSheet.create({
   },
   // Search bar container
   barContainer: {
-    borderWidth: 1,
     width: '85.2893%',
     height: '4.3196%',
     marginTop: '6.47%',
+    borderRadius: 40,
   },
   // Apiary list container
   apiaryContainer: {

@@ -15,18 +15,29 @@ RNLocation.configure({
   },
 });
 
-const ApiKey = 'AIzaSyB-kx_p7omVLQAmEkipUxTuvu-qYfvLl5c';
-
 export default function WorldView() {
   const [lat, setLat] = useState(0);
   const [lon, setLong] = useState(0);
   const [init, setInit] = useState(false);
-  const [hiveData, setHiveData] = useState([]);
+  const [hiveData, setHiveData] = useState();
 
   useEffect(() => {
-    getData().then(() => {
-      getCurrLocation();
-    });
+    firestore()
+      .collection('Users')
+      .get()
+      .then(res => {
+        res.forEach(user => {
+          console.log(user.data());
+        });
+      })
+      .then(() => {
+        getCurrLocation().then(() => {
+          getData().then(() => {
+            console.log(hiveData);
+            setInit(true);
+          });
+        });
+      });
   }, []);
 
   async function getData() {
@@ -34,6 +45,7 @@ export default function WorldView() {
       .collection('Users')
       .get()
       .then(res => {
+        console.log(res.docs);
         res.forEach(user => {
           var data = user.data();
           if (data['sharing']) {
@@ -57,7 +69,8 @@ export default function WorldView() {
   }
 
   async function getHiveData(user, apiaryName) {
-    var data = hiveData;
+    data = hiveData;
+    if (!hiveData) data = [];
 
     firestore()
       .collection('Users')
@@ -73,7 +86,6 @@ export default function WorldView() {
             hive['affected'] == 'true'
               ? require('../assets/img/varroa.png')
               : require('../assets/img/download.jpg');
-          console.log(img);
           var markerData = {
             name: hive['name'],
             affected: hive['affected'],
@@ -132,11 +144,10 @@ export default function WorldView() {
       var lon = parseFloat(location['longitude']).toFixed(4).toString();
       setLat(lat);
       setLong(lon);
-      setInit(true);
     }
   }
 
-  if (!init) return null;
+  if (!init || !hiveData) return null;
 
   const region = {
     latitude: lat,
@@ -152,19 +163,23 @@ export default function WorldView() {
         ref={ref => {
           this.map = ref;
         }}>
-        {hiveData.map((hive, index) => (
-          <Marker
-            key={index}
-            coordinate={hive['coords']}
-            title={hive['name']}
-            description={hive['affected']}>
-            <Image
-              source={hive['img']}
-              style={{width: 40, height: 40}}
-              resizeMode="contain"
-            />
-          </Marker>
-        ))}
+        {hiveData.map((hive, index) => {
+          console.log('HIVE');
+          console.log(hive);
+          return (
+            <Marker
+              key={index}
+              coordinate={hive['coords']}
+              title={hive['name']}
+              description={hive['affected']}>
+              <Image
+                source={hive['img']}
+                style={{width: 40, height: 40}}
+                resizeMode="contain"
+              />
+            </Marker>
+          );
+        })}
       </MapView>
       <View
         style={{
