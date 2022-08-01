@@ -111,9 +111,16 @@ export default function ViewApiary({route, navigation}) {
 
       {/* Apiary Coordinates */}
       <View style={styles.infoContainer}>
-        <Text style={styles.infoText}>
-          {route['latitude']} {route['longitude']}
-        </Text>
+        {route['city'] === '' && (
+          <Text style={styles.infoText}>
+            {route['latitude']} {route['longitude']}
+          </Text>
+        )}
+        {route['city'] !== '' && (
+          <Text style={styles.infoText}>
+            {route['city']} {route['country']}
+          </Text>
+        )}
       </View>
 
       {/* Hive list */}

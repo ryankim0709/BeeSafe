@@ -16,6 +16,7 @@ import {useFocusEffect} from '@react-navigation/native';
 export default function Home({navigation}) {
   // Auth states
   const [data, setData] = useState([]);
+  const [search, setSearch] = useState('');
 
   // Auth state change
   async function onAuthStateChanged(user) {
@@ -94,6 +95,27 @@ export default function Home({navigation}) {
       });
   }
 
+  async function getQueryData(querry) {
+    querry = querry.toLowerCase();
+    dataTemp = [];
+    firestore()
+      .collection('Users')
+      .doc(auth().currentUser.email)
+      .collection('Apiaries')
+      .get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          var name = doc.data()['name'].toLowerCase();
+          if (name.includes(querry)) {
+            dataTemp.push(doc.data());
+          }
+        });
+      })
+      .then(() => {
+        setData(dataTemp);
+      });
+  }
+
   async function initUser() {
     // using auth().currentUser is faster than user.
     var displayname = auth().currentUser.displayName;
@@ -118,7 +140,12 @@ export default function Home({navigation}) {
     <View style={styles.container}>
       {/* Seach Bar */}
       <SearchBar
-        placeholder="Apiary"
+        placeholder="Apiary Name"
+        value={search}
+        onChangeText={text => {
+          setSearch(text);
+          getQueryData(text);
+        }}
         platform="ios"
         containerStyle={{
           width: '85.2893%',
