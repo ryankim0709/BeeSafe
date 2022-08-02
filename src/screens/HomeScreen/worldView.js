@@ -84,8 +84,8 @@ export default function WorldView() {
           var hive = hive.data();
           var img =
             hive['affected'] == 'true'
-              ? require('../assets/img/varroa.png')
-              : require('../assets/img/download.jpg');
+              ? require('../../assets/img/varroa.png')
+              : require('../../assets/img/bee.png');
           var markerData = {
             name: hive['name'],
             affected: hive['affected'],

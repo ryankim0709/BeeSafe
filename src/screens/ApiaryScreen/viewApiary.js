@@ -10,8 +10,8 @@ import {
 } from 'react-native';
 
 // Component imports
-import Banner from '../components/banner';
-import HiveCell from '../components/hiveCell';
+import Banner from '../../components/banner';
+import HiveCell from '../../components/hiveCell';
 
 // Auth imports
 import auth from '@react-native-firebase/auth';
@@ -134,9 +134,11 @@ export default function ViewApiary({route, navigation}) {
                 /* Navigate to hive check on press */
               }
               var apiaryName = route['name'];
-              navigation.navigate('HiveCheck', {
+              navigation.navigate('HiveBottomTabs', {
                 hiveName: data['name'],
                 apirayName: apiaryName,
+                data: data,
+                data2: route,
               });
             }}>
             <HiveCell

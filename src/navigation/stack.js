@@ -8,7 +8,8 @@ import {createStackNavigator} from '@react-navigation/stack';
 import Login from '../screens/login';
 import HomeBottomTabs from './homeBottomTabs';
 import ApiaryBottomTabs from './apiaryBottomTabs';
-import BackHome from '../screens/backHome';
+import HiveBottomTabs from './hiveBottomTabs';
+import BackOne from '../screens/backOne';
 import HiveCheck from '../screens/hiveCheck';
 
 // Auth imports
@@ -41,10 +42,16 @@ export default function StackNavigator() {
         options={{headerShown: false, gestureEnabled: true}}
       />
 
+      <Stack.Screen
+        name="HiveBottomTabs"
+        component={HiveBottomTabs}
+        options={{headerShown: false, gestureEnabled: true}}
+      />
+
       {/* Dummy screen to navigate back to HomeBttomTabs */}
       <Stack.Screen
-        name="BackHome"
-        component={BackHome}
+        name="BackOne"
+        component={BackOne}
         options={{headerShown: false, gestureEnabled: true}}
       />
 

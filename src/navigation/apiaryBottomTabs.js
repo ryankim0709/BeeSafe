@@ -9,10 +9,10 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
 
 // Componenet imports
-import ViewApiary from '../screens/viewApiary';
-import Settings from '../screens/settings.js';
-import BackHome from '../screens/backHome';
-import CreateHive from '../screens/createHive';
+import ViewApiary from '../screens/ApiaryScreen/viewApiary';
+import Settings from '../screens/settings';
+import BackOne from '../screens/backOne';
+import CreateHive from '../screens/ApiaryScreen/createHive';
 
 const Tab = createBottomTabNavigator();
 
@@ -31,7 +31,7 @@ export default function ApiaryBottomTabs({route}) {
       {/* Back to home screen */}
       <Tab.Screen
         name="Home"
-        component={BackHome}
+        component={BackOne}
         options={{
           tabBarIcon: ({color, size}) => (
             <Feather name="home" color={color} size={size} />

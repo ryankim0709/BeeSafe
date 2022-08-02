@@ -1,9 +1,9 @@
 import React, {useEffect} from 'react';
 
-export default function BackHome({navigation}) {
+export default function BackOne({navigation}) {
   useEffect(() => {
     // Navigate back home
-    navigation.navigate('HomeBottomTabs');
+    navigation.goBack();
   }, []);
   return null;
 }

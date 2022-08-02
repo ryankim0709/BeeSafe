@@ -12,11 +12,9 @@ import {
   TouchableWithoutFeedback,
   Modal,
   Platform,
-  Alert,
-  Linking,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import Banner from '../components/banner';
+import Banner from '../../components/banner';
 import Icon from 'react-native-vector-icons/Feather';
 
 // Image storage imports
@@ -30,31 +28,28 @@ import firestore from '@react-native-firebase/firestore';
 // Navigation imports
 import {useFocusEffect} from '@react-navigation/native';
 
-// Location Imports
-import RNLocation from 'react-native-location';
+import DropDownPicker from 'react-native-dropdown-picker';
 
-RNLocation.configure({
-  distanceFilter: 0,
-  desiredAccuracy: {
-    ios: 'best',
-    android: 'balancedPowerAccuracy',
-  },
-});
+export default function CreateHive({navigation, route}) {
+  // Dropdown states
+  const [open, setOpen] = useState(false);
+  const [hiveTypes, setHiveTypes] = useState([
+    {label: 'Langstroth', value: 'Langstroth'},
+    {label: 'Top Bar', value: 'Top Bar'},
+    {label: 'Warre', value: 'Warre'},
+  ]);
 
-const ApiKey = 'AIzaSyB-kx_p7omVLQAmEkipUxTuvu-qYfvLl5c';
-
-export default function CreateApiary({navigation}) {
-  // Apiary creation states
+  // Hive creation states
   const [name, setName] = useState();
-  const [latitude, setLatitude] = useState();
-  const [longitude, setLongitude] = useState();
+  const [frames, setFrames] = useState();
+  const [type, setType] = useState();
   const [notes, setNotes] = useState('');
   const [image, setImage] = useState(null);
   const [uri, setUri] = useState(image?.assets && image.assets[0].uri);
-  const [city, setCity] = useState('');
-  const [country, setCountry] = useState('');
   const [errorMessage, setErrorMessage] = useState();
   const [modalIsVisible, setModalIsVisible] = useState(false);
+  const [lat, setLat] = useState(0);
+  const [lon, setLon] = useState(0);
 
   // Setup states
   const [ready, setReady] = useState(false);
@@ -65,21 +60,21 @@ export default function CreateApiary({navigation}) {
       setReady(true);
       return () => {
         setReady(false);
-        setModalIsVisible(false);
         setName();
-        setLatitude();
-        setLongitude();
-        setNotes('');
-        setCity('');
-        setCountry('');
+        setFrames();
+        setType();
+        setNotes();
         setImage(null);
         setUri(null);
+        setModalIsVisible(false);
       };
     }, []),
   );
 
   useEffect(() => {
-    // Image URI for display every time image changes
+    setLat(route['latitude']);
+    setLon(route['longitude']);
+    // Image URI for display
     setUri(image?.assets && image.assets[0].uri);
   }, [image]);
 
@@ -106,11 +101,30 @@ export default function CreateApiary({navigation}) {
     launchCamera(options, setImage);
   }
 
-  async function uploadApiary() {
+  const uploadHive = async () => {
+    // Get the day, month, & year
+    var months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'June',
+      'July',
+      'Aug',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    var today = new Date();
+    var day = String(today.getDate());
+    var month = String(months[today.getMonth()]);
+    var year = String(today.getFullYear());
+
     // Error handling
     if (!uri || !image) {
       setModalIsVisible(true);
-      setErrorMessage('Please uplaod an image of your apiary');
+      setErrorMessage('Please uplaod an image of your hive');
       return;
     }
     if (!name) {
@@ -118,14 +132,18 @@ export default function CreateApiary({navigation}) {
       setErrorMessage('Please add your apiary name');
       return;
     }
-    if (!latitude || !longitude) {
+    if (!frames) {
       setModalIsVisible(true);
-      setErrorMessage('Please add the latitude/longitude of your apiary');
+      setErrorMessage('Please add the number of frames in your hive');
+      return;
+    }
+    if (!type) {
+      setModalIsVisible(true);
+      setErrorMessage('Please add the type of your hive');
       return;
     }
     if (!notes) {
-      // If there are no notes, then notes should be empty
-      await setNotes('');
+      setNotes('');
     }
 
     // Image upload
@@ -140,166 +158,49 @@ export default function CreateApiary({navigation}) {
     setImage(null);
     // Image upload complete
 
-    // Get image download link
+    // Get download link
     const downloadlink = (
       await storage().ref(filename).getDownloadURL()
     ).toString();
     try {
       await downloadlink;
+      console.log(downloadlink);
     } catch (e) {
       console.error(e);
     }
-
+    if (!notes) {
+      setNotes('');
+    }
     // Add apiary to firestore
-    const apiaryRoute = firestore()
+    firestore()
       .collection('Users')
       .doc(auth().currentUser.email)
       .collection('Apiaries')
-      .doc(name);
-
-    apiaryRoute.get().then(docSnapshot => {
-      if (docSnapshot.exists) {
-        Alert.alert(
-          'Apiary already exists',
-          'Would you like to overwrite your other Apiary?',
-          [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-              onPress: () => navigation.goBack(),
-            },
-            {text: 'OK', onPress: () => pushData(downloadlink)},
-          ],
-        );
-      } else {
-        pushData(downloadlink);
-      }
-    });
-    // Apiary addition complete
-  }
-
-  async function pushData(downloadlink) {
-    const apiaryPath = firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(name);
-    apiaryPath
+      .doc(route['name'])
+      .collection('Hives')
+      .doc(name)
       .set({
         name: name,
-        latitude: latitude,
-        longitude: longitude,
+        frames: frames,
+        type: type,
         notes: notes,
         downloadurl: downloadlink,
-        city: city,
-        country: country,
+        day: day,
+        month: month,
+        year: year,
+        latitude: lat,
+        longitude: lon,
       })
       .then(() => {
-        apiaryPath
-          .collection('Hives')
-          .get()
-          .then(querySnapshot => {
-            querySnapshot.docs.map(item => {
-              var name = item.data()['name'];
-              apiaryPath
-                .collection('Hives')
-                .doc(name)
-                .delete()
-                .then(() => {
-                  console.log('Hive deleted');
-                });
-            });
-          });
-        navigation.goBack();
+        navigation.navigate('ApiaryBottomTabs', {
+          screen: 'View Apiary',
+        });
       })
       .catch(e => {
         console.log(e);
       });
-  }
-
-  async function getLocation() {
-    let permission = await RNLocation.checkPermission({
-      ios: 'whenInUse', // or 'always'
-      android: {
-        detail: 'coarse', // or 'fine'
-      },
-    });
-    let location;
-    if (!permission) {
-      permission = await RNLocation.requestPermission({
-        ios: 'whenInUse',
-        android: {
-          detail: 'coarse',
-          rationale: {
-            title: 'We need to access your location',
-            message: 'We use your location to show where you are on the map',
-            buttonPositive: 'OK',
-            buttonNegative: 'Cancel',
-          },
-        },
-      });
-
-      if (permission == false) {
-        Alert.alert(
-          'Location Preferences',
-          'Please allow location permissions for automatic latitude/longitude',
-          [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-            {text: 'OK', onPress: () => Linking.openSettings()},
-          ],
-        );
-      }
-    } else {
-      location = await RNLocation.getLatestLocation({timeout: 100});
-      console.log(location);
-      var lat = parseFloat(location['latitude']).toFixed(4).toString();
-      var lon = parseFloat(location['longitude']).toFixed(4).toString();
-      setLatitude(lat);
-      setLongitude(lon);
-
-      return new Promise((resolve, reject) => {
-        fetch(
-          'https://maps.googleapis.com/maps/api/geocode/json?address=' +
-            lat +
-            ',' +
-            lon +
-            '&key=' +
-            ApiKey,
-        )
-          .then(response => response.json())
-          .then(responseJson => {
-            if (responseJson.status === 'OK') {
-              var locData = responseJson.results[0]['address_components'];
-
-              for (const [id, val] of Object.entries(locData)) {
-                var long_name = val['long_name'];
-                var short_name = val['short_name'];
-                var types = val['types'];
-
-                if (
-                  types.includes('locality') ||
-                  types.includes('sublocality')
-                ) {
-                  console.log(long_name);
-                  setCity(long_name);
-                }
-                if (types.includes('country')) {
-                  setCountry(short_name);
-                }
-              }
-            } else {
-              reject('Not found');
-            }
-          })
-          .catch(error => {
-            console.log(error);
-          });
-      });
-    }
-  }
+    // Hive addition complete
+  };
 
   if (!ready) return null;
   return (
@@ -312,7 +213,7 @@ export default function CreateApiary({navigation}) {
         <View style={styles.container}>
           {/* Banner Container */}
           <View style={styles.bannerContainer}>
-            <Banner text="Add Your Apiary" />
+            <Banner text="Add Your Hive" />
           </View>
 
           {/* Image upload container */}
@@ -354,36 +255,61 @@ export default function CreateApiary({navigation}) {
             }}
           />
 
-          {/* Latitude and Longitude form */}
-          <View style={styles.coordContainer}>
-            <TextInput
-              style={styles.posInputBox}
-              placeholder="Latitude"
-              keyboardType="numeric"
-              value={latitude}
-              onChangeText={text => {
-                setLatitude(text);
-              }}
-            />
-            <TextInput
-              style={styles.posInputBox}
-              placeholder="Longitude"
-              value={longitude}
-              keyboardType="numeric"
-              onChangeText={text => {
-                setLongitude(text);
-              }}
-            />
+          {/* Frame choice buttons */}
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoText}>Frames</Text>
+            <TouchableOpacity
+              style={[
+                styles.frameButton,
+                {backgroundColor: frames == 8 ? '#F09819' : 'white'},
+              ]}
+              onPress={() => {
+                setFrames(8);
+              }}>
+              <Text
+                style={[
+                  styles.createCancelText,
+                  {color: frames == 8 ? 'white' : 'black'},
+                ]}>
+                8
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.frameButton,
+                {backgroundColor: frames == 10 ? '#F09819' : 'white'},
+              ]}
+              onPress={() => {
+                setFrames(10);
+              }}>
+              <Text
+                style={[
+                  styles.createCancelText,
+                  {color: frames == 10 ? 'white' : 'black'},
+                ]}>
+                10
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Get Current Location button */}
-          <TouchableOpacity
-            style={styles.getCurrLocationButton}
-            onPress={() => {
-              getLocation();
-            }}>
-            <Text style={styles.getCurrLocationText}>Get Current Location</Text>
-          </TouchableOpacity>
+          {/* Hive type dropdown */}
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoText}>Type</Text>
+            <View style={{width: '67%'}}>
+              <DropDownPicker
+                open={open}
+                value={type}
+                items={hiveTypes}
+                setOpen={setOpen}
+                setValue={setType}
+                setItems={setHiveTypes}
+                style={{zIndex: 0, borderColor: '#F09819'}}
+                placeholder={'Select Hive Type'}
+                dropDownContainerStyle={{borderColor: '#F09819'}}
+                textStyle={{fontFamily: 'Montserrat', fontWeight: '500'}}
+              />
+            </View>
+          </View>
 
           {/* Notes form */}
           <TextInput
@@ -402,7 +328,7 @@ export default function CreateApiary({navigation}) {
             {/* Create button */}
             <TouchableOpacity
               style={[styles.createCancelButton, {backgroundColor: '#EEC746'}]}
-              onPress={uploadApiary}>
+              onPress={uploadHive}>
               <Text style={[styles.createCancelText, {color: 'white'}]}>
                 Create
               </Text>
@@ -412,7 +338,12 @@ export default function CreateApiary({navigation}) {
             <TouchableOpacity
               style={[styles.createCancelButton, {backgroundColor: '#FFFFFF'}]}
               onPress={() => {
-                navigation.goBack();
+                navigation.navigate('ApiaryBottomTabs', {
+                  screen: 'View Apiary',
+                  name: route['name'],
+                  latitude: route['latitude'],
+                  longitude: route['longitude'],
+                });
               }}>
               <Text style={[styles.createCancelText, {color: '#EEC746'}]}>
                 Cancel
@@ -513,44 +444,33 @@ const styles = StyleSheet.create({
     paddingLeft: 5,
     fontFamily: 'Montserrat',
   },
-  // Coordinates form container
-  coordContainer: {
-    width: '84.3457%',
+  // Frames and type textinput container
+  infoContainer: {
+    marginTop: '3.455%',
+    width: '85.981%',
     height: '4.21166%',
-    alignSelf: 'center',
-    marginTop: '5.29157%',
     justifyContent: 'space-between',
     flexDirection: 'row',
+    zIndex: 2,
   },
-  // Current location button text
-  getCurrLocationText: {
-    color: 'white',
+  // Information text (next to TextInput)
+  infoText: {
     fontFamily: 'Montserrat',
     fontWeight: '600',
-    fontSize: 17,
+    fontSize: 18,
     lineHeight: 21.94,
+    justifyContent: 'center',
+    alignSelf: 'center',
+    width: '20%',
   },
-  // Latitude/longitude form box
-  posInputBox: {
+  // Information fomr
+  infoInput: {
+    width: '55.36723%',
     height: '100%',
-    width: '45.5840%',
-    paddingLeft: 5,
     borderRadius: 10,
+    paddingLeft: 5,
     borderColor: '#F09819',
     borderWidth: 1,
-    fontFamily: 'Montserrat',
-  },
-  // Get current location button container
-  getCurrLocationButton: {
-    alignSelf: 'flex-start',
-    marginTop: '5.29157%',
-    marginLeft: '7.009345%',
-    width: '49.5327%',
-    height: '4.21166%',
-    backgroundColor: '#EEC746',
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   // Notes form
   notesInput: {
@@ -560,10 +480,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
     alignSelf: 'flex-start',
     marginLeft: '6.542%',
-    marginTop: '5.29157%',
+    marginTop: '10%',
     fontFamily: 'Montserrat',
     paddingLeft: '4.297%',
     paddingTop: '3.9071%',
+    zIndex: 1,
   },
   // Create/cancel container
   createCancelContainer: {
@@ -625,5 +546,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat',
     fontWeight: '600',
     textAlign: 'center',
+  },
+  frameButton: {
+    borderColor: '#F09819',
+    width: '27%',
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
   },
 });

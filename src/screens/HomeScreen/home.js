@@ -8,7 +8,7 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 
 // Component imports
-import ApiaryCell from '../components/apiaryCell';
+import ApiaryCell from '../../components/apiaryCell';
 
 // Navigation imports
 import {useFocusEffect} from '@react-navigation/native';
