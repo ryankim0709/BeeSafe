@@ -9,7 +9,7 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
 
 // Componenet imports
-import Settings from '../screens/settings.js';
+import DiseaseScan from '../screens/HiveScreen/diseaseScan.js';
 import BackOne from '../screens/backOne.js';
 import ViewHive from '../screens/HiveScreen/viewHive.js';
 
@@ -21,7 +21,7 @@ const Tab = createBottomTabNavigator();
 export default function HiveBottomTabs({route}) {
   return (
     <Tab.Navigator
-      initialRouteName="View Apiary"
+      initialRouteName="View Hive"
       screenOptions={{
         headerShown: false,
         tabBarInactiveTintColor: 'black',
@@ -29,7 +29,7 @@ export default function HiveBottomTabs({route}) {
       }}>
       {/* Back to home screen */}
       <Tab.Screen
-        name="Home"
+        name="Apiary"
         component={BackOne}
         options={{
           tabBarIcon: ({color, size}) => (
@@ -48,7 +48,7 @@ export default function HiveBottomTabs({route}) {
 
       {/* Home page. Where the hives are displayed */}
       <Tab.Screen
-        name="View Apiary"
+        name="View Hive"
         options={{
           tabBarIcon: ({color, size}) => (
             <Community name="magnify" color={color} size={size} />
@@ -62,18 +62,15 @@ export default function HiveBottomTabs({route}) {
             display: getTabBarVisibility(route),
           },
         }}>
-        {props => (
-          <ViewHive {...props} data={route.params} route={route.params} />
-        )}
+        {props => <ViewHive route={route.params} />}
       </Tab.Screen>
 
       {/* Apiary Edits */}
       <Tab.Screen
-        name="Edit Apiary"
-        component={Settings}
+        name="Disease Scan"
         options={{
           tabBarIcon: ({color, size}) => (
-            <Ionicon name="ios-settings-outline" color={color} size={size} />
+            <Ionicon name="ios-scan" color={color} size={size} />
           ),
           tabBarStyle: {
             backgroundColor: '#F09819',
@@ -83,8 +80,9 @@ export default function HiveBottomTabs({route}) {
             borderTopRightRadius: 20,
             display: getTabBarVisibility(route),
           },
-        }}
-      />
+        }}>
+        {props => <DiseaseScan route={route.params} />}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 }
