@@ -23,6 +23,7 @@ import {useFocusEffect} from '@react-navigation/native';
 export default function ViewApiary({route, navigation}) {
   const uri = route['downloadurl']; // Cover image uri
   const [data, setData] = useState([]); // Apiary image
+  const apiaryName = route['name'];
 
   async function onAuthStateChanged(user) {
     if (!user) {
@@ -50,7 +51,7 @@ export default function ViewApiary({route, navigation}) {
       .collection('Users')
       .doc(auth().currentUser.email)
       .collection('Apiaries')
-      .doc(route['name'])
+      .doc(apiaryName)
       .collection('Hives')
       .onSnapshot(logData, onError);
 
@@ -78,7 +79,7 @@ export default function ViewApiary({route, navigation}) {
       .collection('Users')
       .doc(auth().currentUser.email)
       .collection('Apiaries')
-      .doc(route['name'])
+      .doc(apiaryName)
       .collection('Hives')
       .get()
       .then(querySnapshot => {
@@ -126,21 +127,7 @@ export default function ViewApiary({route, navigation}) {
       {/* Hive list */}
       <ScrollView style={styles.hiveContainer}>
         {data.map((data, key) => (
-          <TouchableOpacity
-            style={styles.hiveCellContainer}
-            key={key}
-            onPress={() => {
-              {
-                /* Navigate to hive check on press */
-              }
-              var apiaryName = route['name'];
-              navigation.navigate('HiveBottomTabs', {
-                hiveName: data['name'],
-                apirayName: apiaryName,
-                data: data,
-                data2: route,
-              });
-            }}>
+          <View style={styles.hiveCellContainer} key={key}>
             <HiveCell
               name={data['name']}
               uri={data['downloadurl']}
@@ -148,8 +135,11 @@ export default function ViewApiary({route, navigation}) {
               day={data['day']}
               year={data['year']}
               type={data['type']}
+              navigation={navigation}
+              hiveData={data}
+              apiaryData={route}
             />
-          </TouchableOpacity>
+          </View>
         ))}
       </ScrollView>
 

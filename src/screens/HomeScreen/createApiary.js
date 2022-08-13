@@ -320,24 +320,21 @@ export default function CreateApiary({navigation}) {
             {/* Display image if image is selected */}
             <ImageBackground
               source={{uri: uri}}
-              style={styles.backgroundImage}
+              style={[styles.backgroundImage, {justifyContent: 'flex-end'}]}
               imageStyle={{borderRadius: 10}}
               resizeMode="cover">
               {/* Image picking options container */}
               <View
                 style={{
-                  marginLeft: '80%',
-                  marginTop: '29%',
+                  alignSelf: 'flex-end',
                   flexDirection: 'row',
                 }}>
                 {/* Take picture button */}
-                <TouchableOpacity
-                  onPress={takeImage}
-                  style={{paddingRight: '10%'}}>
+                <TouchableOpacity onPress={takeImage} style={{padding: 5}}>
                   <Icon name="camera" size={27.63} />
                 </TouchableOpacity>
                 {/* Upload image button */}
-                <TouchableOpacity onPress={selectImage}>
+                <TouchableOpacity onPress={selectImage} style={{padding: 5}}>
                   <Icon name="upload-cloud" size={27.63} />
                 </TouchableOpacity>
               </View>

@@ -75,7 +75,7 @@ export default function ViewHive({navigation, route}) {
   );
 
   useEffect(() => {
-    const data = route['data'];
+    const data = route['hiveData'];
     // Image URI for display
     setUri(image?.assets && image.assets[0].uri);
 
@@ -166,8 +166,7 @@ export default function ViewHive({navigation, route}) {
     } else {
       downloadlink = uri;
     }
-    console.log(route['apirayName']);
-    console.log(downloadlink);
+    console.log(route);
     // Add apiary to firestore
     firestore()
       .collection('Users')

@@ -194,6 +194,13 @@ export default function CreateHive({navigation, route}) {
       .then(() => {
         navigation.navigate('ApiaryBottomTabs', {
           screen: 'View Apiary',
+          name: route['name'],
+          latitude: route['latitude'],
+          longitude: route['longitude'],
+          notes: route['notes'],
+          downloadurl: route['downloadurl'],
+          city: route['city'],
+          country: route['country'],
         });
       })
       .catch(e => {
@@ -221,24 +228,21 @@ export default function CreateHive({navigation, route}) {
             {/* Display image if image is selected */}
             <ImageBackground
               source={{uri: uri}}
-              style={styles.backgroundImage}
+              style={[styles.backgroundImage, {justifyContent: 'flex-end'}]}
               imageStyle={{borderRadius: 10}}
               resizeMode="cover">
               {/* Image picking options container */}
               <View
                 style={{
-                  marginLeft: '80%',
-                  marginTop: '29%',
+                  alignSelf: 'flex-end',
                   flexDirection: 'row',
                 }}>
                 {/* Take picture button */}
-                <TouchableOpacity
-                  onPress={takeImage}
-                  style={{paddingRight: '10%'}}>
+                <TouchableOpacity onPress={takeImage} style={{padding: 5}}>
                   <Icon name="camera" size={27.63} />
                 </TouchableOpacity>
                 {/* Upload image button */}
-                <TouchableOpacity onPress={selectImage}>
+                <TouchableOpacity onPress={selectImage} style={{padding: 5}}>
                   <Icon name="upload-cloud" size={27.63} />
                 </TouchableOpacity>
               </View>
@@ -343,6 +347,8 @@ export default function CreateHive({navigation, route}) {
                   name: route['name'],
                   latitude: route['latitude'],
                   longitude: route['longitude'],
+                  city: route['city'],
+                  country: route['country'],
                 });
               }}>
               <Text style={[styles.createCancelText, {color: '#EEC746'}]}>
