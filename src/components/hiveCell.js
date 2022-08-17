@@ -60,7 +60,7 @@ export default function HiveCell(route) {
             onPress={() => {
               deleteHive();
             }}>
-            <Feather name="trash-2" size={20} />
+            <Feather name="trash-2" size={25} />
           </TouchableOpacity>
         </View>
       </View>
@@ -92,12 +92,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   trashContainer: {
-    width: '12%',
+    width: '17%',
     height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   textContainer: {
     width: '88%',
     height: '100%',
+    flexDirection: 'column',
+    justifyContent:'space-evenly'
   },
   // Text style
   infoText: {

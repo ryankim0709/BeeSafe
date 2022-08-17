@@ -96,9 +96,7 @@ export default function ViewApiary({route, navigation}) {
   return (
     <View style={styles.container}>
       {/* Banner */}
-      <View style={styles.bannerContainer}>
-        <Banner text="Apiary" />
-      </View>
+      <Banner text="Apiary" />
 
       {/* Cover image */}
       <View style={styles.apiaryImageContainer}>
@@ -190,7 +188,7 @@ const styles = StyleSheet.create({
   },
   // Information text
   infoText: {
-    color: '#686A68',
+    color: '#5a5a5a',
     fontFamily: 'Montserrat',
     fontWeight: 'normal',
     fontWeight: '700',

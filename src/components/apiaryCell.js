@@ -50,8 +50,14 @@ export default function ApiaryCell(props) {
         {/* Apiary information text container */}
         <View style={styles.textBox}>
           {/* Apiary information */}
-          <View>
-            <Text style={styles.infoText}>{props.name}</Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              alignSelf: 'center',
+            }}>
+            <Text style={styles.infoText}>{props.name}, </Text>
             {props.city === '' && (
               <Text style={styles.infoText}>
                 {props.latitude} {props.longitude}
@@ -70,7 +76,7 @@ export default function ApiaryCell(props) {
               deleteApiary();
             }}>
             {/* Trash bin icon */}
-            <Feather name="trash-2" size={20} />
+            <Feather name="trash-2" size={25} />
           </TouchableOpacity>
         </View>
       </View>
@@ -103,16 +109,18 @@ const styles = StyleSheet.create({
   },
   // Info text container
   textBox: {
-    marginTop: '1%',
+    marginTop: '2%',
     marginLeft: '4.70914%',
     justifyContent: 'space-between',
     flexDirection: 'row',
+    display: 'flex',
   },
   // Info text
   infoText: {
     fontFamily: 'Montserrat',
     fontWeight: '700',
-    fontSize: 13,
+    fontSize: 20,
+    alignSelf: 'center',
   },
   // Cover image
   coverImage: {

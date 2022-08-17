@@ -4,18 +4,29 @@ import LinearGradient from 'react-native-linear-gradient';
 
 export default function Banner(props) {
   return (
-    <LinearGradient
-      style={styles.container}
-      colors={['#F09819', '#EDDE5D']}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 0}}>
-      {/* Banner Name */}
-      <Text style={styles.bannerText}>{props.text}</Text>
-    </LinearGradient>
+    <View style={styles.mainContainer}>
+      <LinearGradient
+        style={styles.container}
+        colors={['#F09819', '#EDDE5D']}
+        start={{x: 0, y: 0}}
+        end={{x: 1, y: 0}}>
+        {/* Banner Name */}
+        <Text style={styles.bannerText}>{props.text}</Text>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    width: '84.3457%',
+    height: '4.8596%',
+    marginLeft: '6.542%%',
+    marginTop: '6.6954%',
+    borderTopRightRadius: 30,
+    borderBottomRightRadius: 30,
+    alignSelf: 'flex-start',
+  },
   // Main container
   container: {
     flex: 1,

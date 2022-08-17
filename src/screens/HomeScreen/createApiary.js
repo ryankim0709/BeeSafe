@@ -311,9 +311,7 @@ export default function CreateApiary({navigation}) {
         {/* Main container */}
         <View style={styles.container}>
           {/* Banner Container */}
-          <View style={styles.bannerContainer}>
-            <Banner text="Add Your Apiary" />
-          </View>
+          <Banner text="Add Your Apiary" />
 
           {/* Image upload container */}
           <View style={styles.imageContainer}>
@@ -345,6 +343,7 @@ export default function CreateApiary({navigation}) {
           <TextInput
             style={styles.apiaryNameForm}
             placeholder="Name"
+            placeholderTextColor={'#5a5a5a'}
             value={name}
             onChangeText={text => {
               setName(text);
@@ -357,6 +356,7 @@ export default function CreateApiary({navigation}) {
               style={styles.posInputBox}
               placeholder="Latitude"
               keyboardType="numeric"
+              placeholderTextColor={'#5a5a5a'}
               value={latitude}
               onChangeText={text => {
                 setLatitude(text);
@@ -366,6 +366,7 @@ export default function CreateApiary({navigation}) {
               style={styles.posInputBox}
               placeholder="Longitude"
               value={longitude}
+              placeholderTextColor={'#5a5a5a'}
               keyboardType="numeric"
               onChangeText={text => {
                 setLongitude(text);
@@ -388,7 +389,7 @@ export default function CreateApiary({navigation}) {
             placeholder="Notes"
             value={notes}
             multiline
-            placeholderTextColor={'#86868A'}
+            placeholderTextColor={'#5a5a5a'}
             onChangeText={text => {
               setNotes(text);
             }}
@@ -475,7 +476,7 @@ const styles = StyleSheet.create({
   },
   // Banner container
   bannerContainer: {
-    width: '78.9719%',
+    width: '84.3457%',
     height: '4.8596%',
     marginLeft: '6.542%%',
     marginTop: '6.6954%',
@@ -552,7 +553,7 @@ const styles = StyleSheet.create({
   // Notes form
   notesInput: {
     width: '84.3457%',
-    height: '25.5939%',
+    height: '32%',
     borderRadius: 10,
     backgroundColor: '#F5F5F5',
     alignSelf: 'flex-start',

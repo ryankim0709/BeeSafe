@@ -148,7 +148,7 @@ export default function Home({navigation}) {
         }}
         platform="ios"
         containerStyle={{
-          width: '85.2893%',
+          width: '84.34579%',
           marginTop: '6.47%',
           backgroundColor: 'white',
           borderRadius: 5,
@@ -216,13 +216,13 @@ const styles = StyleSheet.create({
     paddingRight: 10,
     paddingTop: 10,
     marginLeft: '5.14%',
-    marginTop: '0.9719%',
   },
   // Text in "Apiary" header
   headerText: {
     fontFamily: 'Montserrat',
     fontWeight: '600',
-    fontSize: 18,
+    paddingTop: 10,
+    fontSize: 25,
     lineHeight: 21.94,
   },
 });
