@@ -65,7 +65,6 @@ export default function HomeBottomTabs({route}) {
       {/* Create Apiary Screen */}
       <Tab.Screen
         name="World View"
-        component={WorldView}
         options={{
           tabBarIcon: ({color, size}) => (
             <Feather name="globe" color={color} size={size} />
@@ -78,8 +77,9 @@ export default function HomeBottomTabs({route}) {
             borderTopRightRadius: 20,
             display: getTabBarVisibility(route),
           },
-        }}
-      />
+        }}>
+        {props => <WorldView route={route.params} />}
+      </Tab.Screen>
       {/* Settings Screen */}
       <Tab.Screen
         name="Settings"

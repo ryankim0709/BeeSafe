@@ -6,6 +6,7 @@ import {Marker} from 'react-native-maps';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import RNLocation from 'react-native-location';
+import Feather from 'react-native-vector-icons/Feather';
 
 RNLocation.configure({
   distanceFilter: 0,
@@ -15,11 +16,13 @@ RNLocation.configure({
   },
 });
 
-export default function WorldView() {
+export default function WorldView({route}) {
   const [lat, setLat] = useState(0);
   const [lon, setLong] = useState(0);
   const [init, setInit] = useState(false);
   const [hiveData, setHiveData] = useState();
+
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     firestore()
@@ -33,7 +36,6 @@ export default function WorldView() {
       .then(() => {
         getCurrLocation().then(() => {
           getData().then(() => {
-            console.log(hiveData);
             setInit(true);
           });
         });
@@ -101,6 +103,13 @@ export default function WorldView() {
       .then(() => {
         setHiveData(data);
       });
+  }
+
+  async function getMyData() {
+    firestore()
+      .collection('Users')
+      .doc(auth().currentUser.email)
+      .collection('Apiaries');
   }
 
   async function getCurrLocation() {
@@ -184,15 +193,61 @@ export default function WorldView() {
       <View
         style={{
           position: 'absolute', //use absolute position to show button on top of the map
-          top: '50%', //for center align
-          alignSelf: 'flex-end', //for align to right
+          top: '5%', //for center align
+          left: '5%',
         }}>
-        <TouchableOpacity
-          onPress={() => {
-            this.map.animateToRegion(region);
-          }}>
-          <Text>Testing</Text>
-        </TouchableOpacity>
+        {!open && (
+          <TouchableOpacity
+            style={{
+              backgroundColor: 'white',
+              padding: 3,
+              borderRadius: 10,
+            }}
+            onPress={() => {
+              setOpen(true);
+            }}>
+            <Feather name="menu" color={'black'} size={25} />
+          </TouchableOpacity>
+        )}
+        {open && (
+          <TouchableOpacity
+            style={{
+              backgroundColor: 'white',
+              padding: 3,
+              borderRadius: 10,
+              borderBottomLeftRadius: 0,
+              borderBottomRightRadius: 0,
+            }}
+            onPress={() => {
+              setOpen(false);
+            }}>
+            <Feather name="menu" color={'black'} size={25} />
+          </TouchableOpacity>
+        )}
+      </View>
+      <View style={{position: 'absolute', top: '9%', left: '5%'}}>
+        {open && (
+          <View
+            style={{
+              backgroundColor: 'white',
+              padding: 3,
+              borderRadius: 10,
+              borderTopLeftRadius: 0,
+            }}>
+            <TouchableOpacity
+              onPress={() => {
+                this.map.animateToRegion(region);
+              }}>
+              <Text style={styles.text}>Go back home</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                this.map.animateToRegion(region);
+              }}>
+              <Text style={styles.text}>Show my hives</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -201,5 +256,14 @@ export default function WorldView() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  text: {
+    fontFamily: 'Montserrat',
+    fontWeight: '600',
+    fontSize: 17,
+    color: 'black',
+    lineHeight: 21.94,
+    paddingHorizontal: 4,
+    paddingHorizontal: 3,
   },
 });

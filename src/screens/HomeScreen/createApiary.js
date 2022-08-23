@@ -184,6 +184,7 @@ export default function CreateApiary({navigation}) {
       .doc(auth().currentUser.email)
       .collection('Apiaries')
       .doc(name);
+    
     apiaryPath
       .set({
         name: name,

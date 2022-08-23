@@ -13,11 +13,16 @@ import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import storage from '@react-native-firebase/storage';
 
 export default function DiseaseScan({navigation, route}) {
   const [frameCheck, setFrameCheck] = useState([]);
   const [uri, setUri] = useState();
   const [image, setImage] = useState();
+
+  useEffect(() => {
+    //console.log(route);
+  });
 
   async function selectImage() {
     // Launch image library for image selection
@@ -32,6 +37,11 @@ export default function DiseaseScan({navigation, route}) {
     launchImageLibrary(options, setImage).then(res => {
       var temp_uri = res?.assets && res.assets[0].uri;
       setUri(temp_uri);
+
+      var result = [true, false];
+      result = result[Math.floor(Math.random() * 2)];
+
+      uploadData(temp_uri, result);
     });
   }
 
@@ -44,9 +54,92 @@ export default function DiseaseScan({navigation, route}) {
     };
     launchCamera(options, setImage).then(res => {
       var temp_uri = res?.assets && res.assets[0].uri;
-      console.log(temp_uri);
       setUri(temp_uri);
+
+      var result = [true, false];
+      result = result[Math.floor(Math.random() * 2)];
+
+      uploadData(temp_uri, result);
     });
+  }
+
+  async function uploadData(uri, result) {
+    const filename = uri.substring(uri.lastIndexOf('/') + 1);
+    const uploadUri = Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
+    const task = storage().ref(filename).putFile(uploadUri);
+    try {
+      await task;
+    } catch (e) {
+      console.error(e);
+    }
+
+    const downloadlink = (
+      await storage().ref(filename).getDownloadURL()
+    ).toString();
+    try {
+      await downloadlink;
+      console.log(downloadlink);
+    } catch (e) {
+      console.error(e);
+    }
+
+    console.log(route);
+
+    var today = new Date();
+    var day = String(today.getDate());
+    var monthNum = String(today.getMonth() + 1);
+    var year = String(today.getFullYear());
+
+    var dayString = `${monthNum}$${day}$${year}`;
+    var time = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
+
+    firestore()
+      .collection('Users')
+      .doc(auth().currentUser.email)
+      .collection('Apiaries')
+      .doc(route['apiaryName'])
+      .collection('Hives')
+      .doc(route['hiveName'])
+      .get()
+      .then(res => {
+        var checkDates = res.data()['checkdates'];
+        if (checkDates[0] === '') {
+          checkDates = [];
+        }
+        if (!checkDates.includes(dayString)) {
+          checkDates.push(dayString);
+        }
+        firestore()
+          .collection('Users')
+          .doc(auth().currentUser.email)
+          .collection('Apiaries')
+          .doc(route['apiaryName'])
+          .collection('Hives')
+          .doc(route['hiveName'])
+          .update({
+            checkdates: checkDates,
+          })
+          .then(() => {
+            console.log('Complete');
+          });
+      });
+
+    firestore()
+      .collection('Users')
+      .doc(auth().currentUser.email)
+      .collection('Apiaries')
+      .doc(route['apiaryName'])
+      .collection('Hives')
+      .doc(route['hiveName'])
+      .collection(dayString)
+      .doc(time)
+      .set({
+        downloadurl: downloadlink,
+        result: result,
+      })
+      .then(() => {
+        console.log('Complete!');
+      });
   }
 
   async function updateHive() {
@@ -68,11 +161,9 @@ export default function DiseaseScan({navigation, route}) {
     var month = String(months[today.getMonth()]);
     var year = String(today.getFullYear());
 
-    var apiaryName = route['apirayName'];
-    console.log(route);
-    var data = route['data'];
+    var apiaryName = route['apiaryName'];
+    var data = route['hiveData'];
     var hiveName = data['name'];
-    console.log(apiaryName + ' ' + hiveName);
 
     firestore()
       .collection('Users')
@@ -94,9 +185,7 @@ export default function DiseaseScan({navigation, route}) {
   if (!frameCheck) return null;
   return (
     <View style={styles.container}>
-      <View style={styles.bannerContainer}>
-        <Banner text="Disease Scan" />
-      </View>
+      <Banner text="Disease Scan" />
 
       <View>
         <View style={styles.imageBoxContainer}>

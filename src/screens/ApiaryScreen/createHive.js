@@ -190,6 +190,7 @@ export default function CreateHive({navigation, route}) {
         year: year,
         latitude: lat,
         longitude: lon,
+        checkdates: []
       })
       .then(() => {
         navigation.navigate('ApiaryBottomTabs', {
@@ -219,9 +220,7 @@ export default function CreateHive({navigation, route}) {
         {/* Main container */}
         <View style={styles.container}>
           {/* Banner Container */}
-          <View style={styles.bannerContainer}>
-            <Banner text="Add Your Hive" />
-          </View>
+          <Banner text="Add Your Hive" />
 
           {/* Image upload container */}
           <View style={styles.imageContainer}>
@@ -481,7 +480,7 @@ const styles = StyleSheet.create({
   // Notes form
   notesInput: {
     width: '84.3457%',
-    height: '25.5939%',
+    height: '32%',
     borderRadius: 10,
     backgroundColor: '#F5F5F5',
     alignSelf: 'flex-start',

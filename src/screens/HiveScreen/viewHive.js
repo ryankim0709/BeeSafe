@@ -219,9 +219,7 @@ export default function ViewHive({navigation, route}) {
         {/* Main container */}
         <View style={styles.container}>
           {/* Banner Container */}
-          <View style={styles.bannerContainer}>
-            <Banner text="View Hive" />
-          </View>
+          <Banner text="View Hive" />
 
           {/* Image upload container */}
           <View style={styles.imageContainer}>
