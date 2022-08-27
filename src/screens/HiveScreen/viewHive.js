@@ -138,7 +138,6 @@ export default function ViewHive({navigation, route}) {
     var downloadlink = '';
     // Image upload
     if (changed) {
-      console.log(uri);
       const filename = uri.substring(uri.lastIndexOf('/') + 1);
       const uploadUri =
         Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
@@ -166,7 +165,7 @@ export default function ViewHive({navigation, route}) {
     } else {
       downloadlink = uri;
     }
-    console.log(route);
+
     // Add apiary to firestore
     firestore()
       .collection('Users')
@@ -197,7 +196,6 @@ export default function ViewHive({navigation, route}) {
             longitude: route['data']['longitude'],
           })
           .then(() => {
-            console.log('complete');
           })
           .catch(e => {
             console.log(e);

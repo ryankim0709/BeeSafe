@@ -20,9 +20,7 @@ export default function ApiaryCell(props) {
       .collection('Apiaries')
       .doc(props.name)
       .delete()
-      .then(() => {
-        console.log('Apiary Deleted');
-      });
+      .then(() => {});
   }
   const uri = props.downloadurl;
   return (

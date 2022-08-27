@@ -194,6 +194,7 @@ export default function CreateApiary({navigation}) {
         downloadurl: downloadlink,
         city: city,
         country: country,
+        sharing: 0
       })
       .then(() => {
         apiaryPath
@@ -207,7 +208,6 @@ export default function CreateApiary({navigation}) {
                 .doc(name)
                 .delete()
                 .then(() => {
-                  console.log('Hive deleted');
                 });
             });
           });
@@ -255,7 +255,6 @@ export default function CreateApiary({navigation}) {
       }
     } else {
       location = await RNLocation.getLatestLocation({timeout: 100});
-      console.log(location);
       var lat = parseFloat(location['latitude']).toFixed(4).toString();
       var lon = parseFloat(location['longitude']).toFixed(4).toString();
       setLatitude(lat);
@@ -284,7 +283,6 @@ export default function CreateApiary({navigation}) {
                   types.includes('locality') ||
                   types.includes('sublocality')
                 ) {
-                  console.log(long_name);
                   setCity(long_name);
                 }
                 if (types.includes('country')) {

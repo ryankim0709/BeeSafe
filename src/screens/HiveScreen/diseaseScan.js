@@ -20,10 +20,6 @@ export default function DiseaseScan({navigation, route}) {
   const [uri, setUri] = useState();
   const [image, setImage] = useState();
 
-  useEffect(() => {
-    //console.log(route);
-  });
-
   async function selectImage() {
     // Launch image library for image selection
     const options = {
@@ -78,12 +74,10 @@ export default function DiseaseScan({navigation, route}) {
     ).toString();
     try {
       await downloadlink;
-      console.log(downloadlink);
     } catch (e) {
       console.error(e);
     }
 
-    console.log(route);
 
     var today = new Date();
     var day = String(today.getDate());
@@ -120,7 +114,6 @@ export default function DiseaseScan({navigation, route}) {
             checkdates: checkDates,
           })
           .then(() => {
-            console.log('Complete');
           });
       });
 
@@ -138,7 +131,6 @@ export default function DiseaseScan({navigation, route}) {
         result: result,
       })
       .then(() => {
-        console.log('Complete!');
       });
   }
 

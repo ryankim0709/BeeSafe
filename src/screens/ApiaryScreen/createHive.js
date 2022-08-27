@@ -164,7 +164,6 @@ export default function CreateHive({navigation, route}) {
     ).toString();
     try {
       await downloadlink;
-      console.log(downloadlink);
     } catch (e) {
       console.error(e);
     }

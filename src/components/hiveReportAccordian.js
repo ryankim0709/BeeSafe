@@ -11,7 +11,6 @@ export default function HiveReportAccordian(props) {
   const [data, setData] = useState([]);
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    console.log(props['data']);
     setDate(props['date'].replaceAll('$', '/'));
 
     const dataListener = firestore()

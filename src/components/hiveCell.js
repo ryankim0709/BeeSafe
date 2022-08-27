@@ -10,7 +10,7 @@ export default function HiveCell(route) {
   const uri = route['uri'];
 
   useEffect(() => {
-    console.log(route);
+    
   });
 
   async function deleteHive() {
@@ -23,7 +23,6 @@ export default function HiveCell(route) {
       .doc(route['name'])
       .delete()
       .then(() => {
-        console.log('Deletion complete');
       });
   }
 

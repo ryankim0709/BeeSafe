@@ -9,7 +9,6 @@ import { ScrollView } from 'react-native-gesture-handler';
 export default function HiveReport({route}) {
   const [dates, setDates] = useState([]);
   useEffect(() => {
-    console.log(route);
     getDates();
   }, []);
 

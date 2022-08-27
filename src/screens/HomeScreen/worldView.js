@@ -30,7 +30,7 @@ export default function WorldView({route}) {
       .get()
       .then(res => {
         res.forEach(user => {
-          console.log(user.data());
+
         });
       })
       .then(() => {
@@ -47,10 +47,9 @@ export default function WorldView({route}) {
       .collection('Users')
       .get()
       .then(res => {
-        console.log(res.docs);
         res.forEach(user => {
           var data = user.data();
-          if (data['sharing']) {
+          if (data['sharing'] || data['email'] === auth().currentUser.email) {
             getApiaries(data['email']);
           }
         });
@@ -173,8 +172,6 @@ export default function WorldView({route}) {
           this.map = ref;
         }}>
         {hiveData.map((hive, index) => {
-          console.log('HIVE');
-          console.log(hive);
           return (
             <Marker
               key={index}

@@ -128,9 +128,9 @@ export default function Home({navigation}) {
       .set({
         email: email,
         name: displayname,
+        sharing: false,
       })
       .then(() => {
-        console.log('User basics initialized!');
       });
   }
 
