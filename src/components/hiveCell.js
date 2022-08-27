@@ -7,23 +7,22 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
 export default function HiveCell(route) {
-  const uri = route['uri'];
+  const apiaryData = route['apiaryData'];
+  const hiveData = route['hiveData'];
+  const uri = hiveData['downloadurl'];
 
-  useEffect(() => {
-    
-  });
+  useEffect(() => {});
 
   async function deleteHive() {
     firestore()
       .collection('Users')
       .doc(auth().currentUser.email)
       .collection('Apiaries')
-      .doc(route['apiaryData']['name'])
+      .doc(apiaryData['name'])
       .collection('Hives')
-      .doc(route['name'])
+      .doc(hiveData['name'])
       .delete()
-      .then(() => {
-      });
+      .then(() => {});
   }
 
   return (
@@ -33,10 +32,8 @@ export default function HiveCell(route) {
         <TouchableOpacity
           onPress={() => {
             route.navigation.navigate('HiveBottomTabs', {
-              hiveName: route['hiveData']['name'],
-              apiaryName: route['apiaryData']['name'],
-              hiveData: route['hiveData'],
-              apiarydata: route['apiaryData'],
+              hiveData: hiveData,
+              apiaryData: apiaryData,
             });
           }}>
           <Image
@@ -48,10 +45,10 @@ export default function HiveCell(route) {
       {/* Hive extra info */}
       <View style={styles.infoContainer}>
         <View style={styles.textContainer}>
-          <Text style={styles.infoText}>{route['name']}</Text>
-          <Text style={styles.infoText}>{route['type']}</Text>
+          <Text style={styles.infoText}>{hiveData['name']}</Text>
+          <Text style={styles.infoText}>{hiveData['type']}</Text>
           <Text style={styles.infoText}>
-            {route['month']} {route['day']}, {route['year']}
+            {hiveData['month']} {hiveData['day']}, {hiveData['year']}
           </Text>
         </View>
         <View style={styles.trashContainer}>
@@ -100,7 +97,7 @@ const styles = StyleSheet.create({
     width: '88%',
     height: '100%',
     flexDirection: 'column',
-    justifyContent:'space-evenly'
+    justifyContent: 'space-evenly',
   },
   // Text style
   infoText: {

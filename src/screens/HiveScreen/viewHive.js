@@ -39,6 +39,9 @@ export default function ViewHive({navigation, route}) {
     {label: 'Warre', value: 'Warre'},
   ]);
 
+  const apiaryData = route['apiaryData'];
+  const hiveData = route['hiveData'];
+
   // Hive creation states
   const [name, setName] = useState();
   const [frames, setFrames] = useState();
@@ -59,32 +62,20 @@ export default function ViewHive({navigation, route}) {
     React.useCallback(() => {
       setUri(null);
       setReady(true);
-      return () => {
-        // setReady(false);
-        // setName();
-        // setFrames();
-        // setType();
-        // setNotes();
-        // setImage(null);
-        // setUri(null);
-        // setModalIsVisible(false);
-        // setInit(true);
-        // setChanged(false);
-      };
+      return () => {};
     }, []),
   );
 
   useEffect(() => {
-    const data = route['hiveData'];
     // Image URI for display
     setUri(image?.assets && image.assets[0].uri);
 
     if (init) {
-      setUri(data['downloadurl']);
-      setName(data['name']);
-      setFrames(data['frames']);
-      setType(data['type']);
-      setNotes(data['notes']);
+      setUri(hiveData['downloadurl']);
+      setName(hiveData['name']);
+      setFrames(hiveData['frames']);
+      setType(hiveData['type']);
+      setNotes(hiveData['notes']);
       setInit(false);
     }
   }, [image]);
@@ -131,9 +122,6 @@ export default function ViewHive({navigation, route}) {
       setErrorMessage('Please add the type of your hive');
       return;
     }
-    if (!notes) {
-      setNotes('');
-    }
 
     var downloadlink = '';
     // Image upload
@@ -159,8 +147,9 @@ export default function ViewHive({navigation, route}) {
       } catch (e) {
         console.error(e);
       }
-      if (!notes) {
-        setNotes('');
+      var finalNotes = notes;
+      if (!finalNotes) {
+        finalNotes = '';
       }
     } else {
       downloadlink = uri;
@@ -171,32 +160,32 @@ export default function ViewHive({navigation, route}) {
       .collection('Users')
       .doc(auth().currentUser.email)
       .collection('Apiaries')
-      .doc(route['apirayName'])
+      .doc(apiaryData['name'])
       .collection('Hives')
-      .doc(route['data']['name'])
+      .doc(hiveData['name'])
       .delete()
       .then(() => {
         firestore()
           .collection('Users')
           .doc(auth().currentUser.email)
           .collection('Apiaries')
-          .doc(route['apirayName'])
+          .doc(apiaryData['name'])
           .collection('Hives')
           .doc(name)
           .set({
             name: name,
             frames: frames,
             type: type,
-            notes: notes,
+            notes: finalNotes,
             downloadurl: downloadlink,
-            day: route['data']['day'],
-            month: route['data']['month'],
-            year: route['data']['year'],
-            latitude: route['data']['latitude'],
-            longitude: route['data']['longitude'],
+            day: hiveData['day'],
+            month: hiveData['month'],
+            year: hiveData['year'],
+            latitude: hiveData['latitude'],
+            longitude: hiveData['longitude'],
+            checkDates: hiveData['checkdates'],
           })
-          .then(() => {
-          })
+          .then(() => {})
           .catch(e => {
             console.log(e);
           });

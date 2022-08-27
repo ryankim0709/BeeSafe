@@ -50,6 +50,7 @@ export default function CreateHive({navigation, route}) {
   const [modalIsVisible, setModalIsVisible] = useState(false);
   const [lat, setLat] = useState(0);
   const [lon, setLon] = useState(0);
+  const apiaryData = route['data'];
 
   // Setup states
   const [ready, setReady] = useState(false);
@@ -72,8 +73,8 @@ export default function CreateHive({navigation, route}) {
   );
 
   useEffect(() => {
-    setLat(route['latitude']);
-    setLon(route['longitude']);
+    setLat(apiaryData['latitude']);
+    setLon(apiaryData['longitude']);
     // Image URI for display
     setUri(image?.assets && image.assets[0].uri);
   }, [image]);
@@ -142,8 +143,9 @@ export default function CreateHive({navigation, route}) {
       setErrorMessage('Please add the type of your hive');
       return;
     }
-    if (!notes) {
-      setNotes('');
+    var finalNotes = notes;
+    if (!finalNotes) {
+      finalNotes = '';
     }
 
     // Image upload
@@ -167,40 +169,32 @@ export default function CreateHive({navigation, route}) {
     } catch (e) {
       console.error(e);
     }
-    if (!notes) {
-      setNotes('');
-    }
+
     // Add apiary to firestore
     firestore()
       .collection('Users')
       .doc(auth().currentUser.email)
       .collection('Apiaries')
-      .doc(route['name'])
+      .doc(apiaryData['name'])
       .collection('Hives')
       .doc(name)
       .set({
         name: name,
         frames: frames,
         type: type,
-        notes: notes,
+        notes: finalNotes,
         downloadurl: downloadlink,
         day: day,
         month: month,
         year: year,
         latitude: lat,
         longitude: lon,
-        checkdates: []
+        checkdates: [],
       })
-      .then(() => {
+      .then(() => { 
         navigation.navigate('ApiaryBottomTabs', {
           screen: 'View Apiary',
-          name: route['name'],
-          latitude: route['latitude'],
-          longitude: route['longitude'],
-          notes: route['notes'],
-          downloadurl: route['downloadurl'],
-          city: route['city'],
-          country: route['country'],
+          data: apiaryData,
         });
       })
       .catch(e => {
@@ -342,11 +336,7 @@ export default function CreateHive({navigation, route}) {
               onPress={() => {
                 navigation.navigate('ApiaryBottomTabs', {
                   screen: 'View Apiary',
-                  name: route['name'],
-                  latitude: route['latitude'],
-                  longitude: route['longitude'],
-                  city: route['city'],
-                  country: route['country'],
+                  data: apiaryData,
                 });
               }}>
               <Text style={[styles.createCancelText, {color: '#EEC746'}]}>

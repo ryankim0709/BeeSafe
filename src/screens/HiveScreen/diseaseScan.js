@@ -16,9 +16,13 @@ import auth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
 
 export default function DiseaseScan({navigation, route}) {
+  const apiaryData = route['apiaryData'];
+  const hiveData = route['hiveData'];
   const [frameCheck, setFrameCheck] = useState([]);
   const [uri, setUri] = useState();
   const [image, setImage] = useState();
+
+  useEffect(() => {}, []);
 
   async function selectImage() {
     // Launch image library for image selection
@@ -78,7 +82,6 @@ export default function DiseaseScan({navigation, route}) {
       console.error(e);
     }
 
-
     var today = new Date();
     var day = String(today.getDate());
     var monthNum = String(today.getMonth() + 1);
@@ -91,9 +94,9 @@ export default function DiseaseScan({navigation, route}) {
       .collection('Users')
       .doc(auth().currentUser.email)
       .collection('Apiaries')
-      .doc(route['apiaryName'])
+      .doc(apiaryData['name'])
       .collection('Hives')
-      .doc(route['hiveName'])
+      .doc(hiveData['name'])
       .get()
       .then(res => {
         var checkDates = res.data()['checkdates'];
@@ -107,31 +110,29 @@ export default function DiseaseScan({navigation, route}) {
           .collection('Users')
           .doc(auth().currentUser.email)
           .collection('Apiaries')
-          .doc(route['apiaryName'])
+          .doc(apiaryData['name'])
           .collection('Hives')
-          .doc(route['hiveName'])
+          .doc(hiveData['name'])
           .update({
             checkdates: checkDates,
           })
-          .then(() => {
-          });
+          .then(() => {});
       });
 
     firestore()
       .collection('Users')
       .doc(auth().currentUser.email)
       .collection('Apiaries')
-      .doc(route['apiaryName'])
+      .doc(apiaryData['name'])
       .collection('Hives')
-      .doc(route['hiveName'])
+      .doc(hiveData['name'])
       .collection(dayString)
       .doc(time)
       .set({
         downloadurl: downloadlink,
         result: result,
       })
-      .then(() => {
-      });
+      .then(() => {});
   }
 
   async function updateHive() {
@@ -153,17 +154,13 @@ export default function DiseaseScan({navigation, route}) {
     var month = String(months[today.getMonth()]);
     var year = String(today.getFullYear());
 
-    var apiaryName = route['apiaryName'];
-    var data = route['hiveData'];
-    var hiveName = data['name'];
-
     firestore()
       .collection('Users')
       .doc(auth().currentUser.email)
       .collection('Apiaries')
-      .doc(apiaryName)
+      .doc(apiaryData['name'])
       .collection('Hives')
-      .doc(hiveName)
+      .doc(hiveData['name'])
       .update({
         day: day,
         month: month,
@@ -171,6 +168,42 @@ export default function DiseaseScan({navigation, route}) {
       })
       .then(() => {
         return;
+      });
+  }
+
+  async function reportHive() {
+    firestore()
+      .collection('Users')
+      .doc(auth().currentUser.email)
+      .collection('Apiaries')
+      .doc(apiaryData['name'])
+      .get()
+      .then(res => {
+        var sharingData = res.data()['sharing'];
+        if (!sharingData.includes(hiveData['name'])) {
+          sharingData.push(hiveData['name']);
+        }
+        firestore()
+          .collection('Users')
+          .doc(auth().currentUser.email)
+          .collection('Apiaries')
+          .doc(apiaryData['name'])
+          .update({sharing: sharingData});
+      });
+
+    firestore()
+      .collection('Users')
+      .doc(auth().currentUser.email)
+      .get()
+      .then(res => {
+        var sharingData = res.data()['sharing'];
+        if (!sharingData.includes(apiaryData['name'])) {
+          sharingData.push(apiaryData['name']);
+        }
+        firestore()
+          .collection('Users')
+          .doc(auth().currentUser.email)
+          .update({sharing: sharingData});
       });
   }
 
@@ -219,14 +252,23 @@ export default function DiseaseScan({navigation, route}) {
         )}
       </View>
       {/* View for padding at the bottom of ScrollView */}
-      <View style={styles.saveContainer}>
+      <View style={styles.saveReportContainer}>
         {/* Create button */}
         <TouchableOpacity
-          style={[styles.saveButton, {backgroundColor: '#EEC746'}]}
+          style={[styles.saveReportButton, {backgroundColor: '#EEC746'}]}
           onPress={() => {
             updateHive();
           }}>
-          <Text style={[styles.saveText, {color: 'white'}]}>Save</Text>
+          <Text style={[styles.saveReportText, {color: 'white'}]}>Save</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.saveReportButton, {backgroundColor: '#FFFFFF'}]}
+          onPress={() => {
+            reportHive();
+          }}>
+          <Text style={[styles.saveReportText, {color: '#EEC746'}]}>
+            Report
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -268,16 +310,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-evenly',
   },
-  saveContainer: {
+  saveReportContainer: {
     width: '54.9065%',
     height: '4.21166%',
     alignSelf: 'center',
     justifyContent: 'center',
     marginTop: '5.29157%',
     flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   // Create/cancel buttons
-  saveButton: {
+  saveReportButton: {
     height: '100%',
     width: Dimensions.get('window').width * 0.47234 * 0.569065,
     justifyContent: 'center',
@@ -287,7 +330,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   // Create/cancel button texts
-  saveText: {
+  saveReportText: {
     fontFamily: 'Montserrat',
     fontWeight: '600',
     fontSize: 18,

@@ -29,9 +29,7 @@ export default function WorldView({route}) {
       .collection('Users')
       .get()
       .then(res => {
-        res.forEach(user => {
-
-        });
+        res.forEach(user => {});
       })
       .then(() => {
         getCurrLocation().then(() => {
@@ -49,28 +47,46 @@ export default function WorldView({route}) {
       .then(res => {
         res.forEach(user => {
           var data = user.data();
-          if (data['sharing'] || data['email'] === auth().currentUser.email) {
-            getApiaries(data['email']);
+          if (
+            data['sharing'].length > 0 ||
+            data['email'] === auth().currentUser.email
+          ) {
+            getApiaries(data['email'], data['sharing']);
           }
         });
       });
   }
 
-  async function getApiaries(user) {
-    firestore()
-      .collection('Users')
-      .doc(user)
-      .collection('Apiaries')
-      .get()
-      .then(res => {
-        res.forEach(apiary => {
-          getHiveData(user, apiary.data()['name']);
+  async function getApiaries(user, sharing) {
+    if (user == auth().currentUser.email) {
+      firestore()
+        .collection('Users')
+        .doc(user)
+        .collection('Apiaries')
+        .get()
+        .then(res => {
+          res.docs.map(apiary => {
+            getHiveData(user, apiary.data()['name'], []);
+          });
         });
+    } else {
+      sharing.forEach(apiaryName => {
+        firestore()
+          .collection('Users')
+          .doc(user)
+          .collection('Apiaries')
+          .doc(apiaryName)
+          .get()
+          .then(res => {
+            var sharing = res.data()['sharing'];
+            getHiveData(user, apiaryName, sharing);
+          });
       });
+    }
   }
 
-  async function getHiveData(user, apiaryName) {
-    data = hiveData;
+  async function getHiveData(user, apiaryName, sharing) {
+    var data = hiveData;
     if (!hiveData) data = [];
 
     firestore()
@@ -82,21 +98,26 @@ export default function WorldView({route}) {
       .get()
       .then(res => {
         res.forEach(hive => {
-          var hive = hive.data();
-          var img =
-            hive['affected'] == 'true'
-              ? require('../../assets/img/varroa.png')
-              : require('../../assets/img/bee.png');
-          var markerData = {
-            name: hive['name'],
-            affected: hive['affected'],
-            coords: {
-              latitude: hive['latitude'],
-              longitude: hive['longitude'],
-            },
-            img: img,
-          };
-          data.push(markerData);
+          if (
+            user === auth().currentUser.email ||
+            sharing.includes(hive.data()['name'])
+          ) {
+            var hive = hive.data();
+            var img =
+              hive['affected'] == 'true'
+                ? require('../../assets/img/varroa.png')
+                : require('../../assets/img/bee.png');
+            var markerData = {
+              name: hive['name'],
+              affected: hive['affected'],
+              coords: {
+                latitude: hive['latitude'],
+                longitude: hive['longitude'],
+              },
+              img: img,
+            };
+            data.push(markerData);
+          }
         });
       })
       .then(() => {

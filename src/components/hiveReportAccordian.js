@@ -7,6 +7,8 @@ import firestore from '@react-native-firebase/firestore';
 import {Dimensions} from 'react-native';
 
 export default function HiveReportAccordian(props) {
+  const apiaryData = props['data']['apiaryData'];
+  const hiveData = props['data']['hiveData'];
   const [date, setDate] = useState('');
   const [data, setData] = useState([]);
   const [open, setOpen] = useState(false);
@@ -17,9 +19,9 @@ export default function HiveReportAccordian(props) {
       .collection('Users')
       .doc(auth().currentUser.email)
       .collection('Apiaries')
-      .doc(props['data']['apiaryName'])
+      .doc(apiaryData['name'])
       .collection('Hives')
-      .doc(props['data']['hiveName'])
+      .doc(hiveData['name'])
       .collection(props['date'])
       .onSnapshot(getData, onError);
 
@@ -38,9 +40,9 @@ export default function HiveReportAccordian(props) {
       .collection('Users')
       .doc(auth().currentUser.email)
       .collection('Apiaries')
-      .doc(props['data']['apiaryName'])
+      .doc(apiaryData['name'])
       .collection('Hives')
-      .doc(props['data']['hiveName'])
+      .doc(hiveData['name'])
       .collection(props['date'])
       .get()
       .then(res => {
@@ -94,8 +96,7 @@ export default function HiveReportAccordian(props) {
             </View>
           ))}
       </ScrollView>
-      </View>
-      
+    </View>
   );
 }
 

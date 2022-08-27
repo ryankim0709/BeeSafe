@@ -194,7 +194,7 @@ export default function CreateApiary({navigation}) {
         downloadurl: downloadlink,
         city: city,
         country: country,
-        sharing: 0
+        sharing: []
       })
       .then(() => {
         apiaryPath

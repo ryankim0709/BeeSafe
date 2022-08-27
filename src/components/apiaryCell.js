@@ -1,5 +1,5 @@
 // UI imports
-import React from 'react';
+import React, {useEffect} from 'react';
 import {
   View,
   Text,
@@ -13,16 +13,20 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
 export default function ApiaryCell(props) {
+  const data = props.data;
+  useEffect(() => {
+
+  }, []);
   async function deleteApiary() {
     firestore()
       .collection('Users')
       .doc(auth().currentUser.email)
       .collection('Apiaries')
-      .doc(props.name)
+      .doc(data['name'])
       .delete()
       .then(() => {});
   }
-  const uri = props.downloadurl;
+  const uri = data.downloadurl;
   return (
     // Container
     <View style={styles.container}>
@@ -32,13 +36,7 @@ export default function ApiaryCell(props) {
           style={styles.photoBox}
           onPress={() => {
             props.navigation.navigate('ApiaryBottomTabs', {
-              name: props.name,
-              latitude: props.latitude,
-              longitude: props.longitude,
-              notes: props.notes,
-              downloadurl: props.downloadurl,
-              city: props.city,
-              country: props.country,
+              data: data,
             });
           }}>
           {/* Image goes here*/}
@@ -55,15 +53,15 @@ export default function ApiaryCell(props) {
               justifyContent: 'center',
               alignSelf: 'center',
             }}>
-            <Text style={styles.infoText}>{props.name}, </Text>
-            {props.city === '' && (
+            <Text style={styles.infoText}>{data['name']}, </Text>
+            {data['city'] === '' && (
               <Text style={styles.infoText}>
-                {props.latitude} {props.longitude}
+                {data['latitude']} {data['longitude']}
               </Text>
             )}
-            {props.city !== '' && (
+            {data['city'] !== '' && (
               <Text style={styles.infoText}>
-                {props.city} {props.country}
+                {data['city']} {data['country']}
               </Text>
             )}
           </View>

@@ -21,9 +21,10 @@ import firestore from '@react-native-firebase/firestore';
 import {useFocusEffect} from '@react-navigation/native';
 
 export default function ViewApiary({route, navigation}) {
-  const uri = route['downloadurl']; // Cover image uri
+  const apiaryData = route['data'];
+  const uri = apiaryData['downloadurl']; // Cover image uri
   const [data, setData] = useState([]); // Apiary image
-  const apiaryName = route['name'];
+  const apiaryName = apiaryData['name'];
 
   async function onAuthStateChanged(user) {
     if (!user) {
@@ -105,19 +106,19 @@ export default function ViewApiary({route, navigation}) {
 
       {/* Apiary Name */}
       <View style={styles.infoContainer}>
-        <Text style={styles.infoText}>{route['name']}</Text>
+        <Text style={styles.infoText}>{apiaryData['name']}</Text>
       </View>
 
       {/* Apiary Coordinates */}
       <View style={styles.infoContainer}>
-        {route['city'] === '' && (
+        {apiaryData['city'] === '' && (
           <Text style={styles.infoText}>
-            {route['latitude']} {route['longitude']}
+            {apiaryData['latitude']} {apiaryData['longitude']}
           </Text>
         )}
-        {route['city'] !== '' && (
+        {apiaryData['city'] !== '' && (
           <Text style={styles.infoText}>
-            {route['city']} {route['country']}
+            {apiaryData['city']} {apiaryData['country']}
           </Text>
         )}
       </View>
@@ -127,15 +128,9 @@ export default function ViewApiary({route, navigation}) {
         {data.map((data, key) => (
           <View style={styles.hiveCellContainer} key={key}>
             <HiveCell
-              name={data['name']}
-              uri={data['downloadurl']}
-              month={data['month']}
-              day={data['day']}
-              year={data['year']}
-              type={data['type']}
               navigation={navigation}
               hiveData={data}
-              apiaryData={route}
+              apiaryData={apiaryData}
             />
           </View>
         ))}

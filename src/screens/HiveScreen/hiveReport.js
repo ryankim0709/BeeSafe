@@ -4,9 +4,11 @@ import Banner from '../../components/banner';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import HiveReportAccordian from '../../components/hiveReportAccordian';
-import { ScrollView } from 'react-native-gesture-handler';
+import {ScrollView} from 'react-native-gesture-handler';
 
 export default function HiveReport({route}) {
+  const apiaryData = route['apiaryData'];
+  const hiveData = route['hiveData'];
   const [dates, setDates] = useState([]);
   useEffect(() => {
     getDates();
@@ -19,9 +21,9 @@ export default function HiveReport({route}) {
       .collection('Users')
       .doc(auth().currentUser.email)
       .collection('Apiaries')
-      .doc(route['apiaryName'])
+      .doc(apiaryData['name'])
       .collection('Hives')
-      .doc(route['hiveName'])
+      .doc(hiveData['name'])
       .get()
       .then(res => {
         dates = res.data()['checkdates'];

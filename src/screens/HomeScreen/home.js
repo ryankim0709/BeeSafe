@@ -128,10 +128,9 @@ export default function Home({navigation}) {
       .set({
         email: email,
         name: displayname,
-        sharing: false,
+        sharing: []
       })
-      .then(() => {
-      });
+      .then(() => {});
   }
 
   if (!data) return null;
@@ -170,14 +169,8 @@ export default function Home({navigation}) {
         {data.map((data, key) => (
           <View style={styles.apiaryContainer} key={key}>
             <ApiaryCell
-              name={data['name']}
-              latitude={data['latitude']}
-              longitude={data['longitude']}
-              notes={data['notes']}
-              downloadurl={data['downloadurl']}
+              data={data}
               navigation={navigation}
-              city={data['city']}
-              country={data['country']}
             />
           </View>
         ))}
