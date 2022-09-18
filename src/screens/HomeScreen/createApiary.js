@@ -150,43 +150,16 @@ export default function CreateApiary({navigation}) {
       console.error(e);
     }
 
-    // Add apiary to firestore
-    const apiaryRoute = firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(name);
+    var uid = auth().currentUser.uid;
 
-    apiaryRoute.get().then(docSnapshot => {
-      if (docSnapshot.exists) {
-        Alert.alert(
-          'Apiary already exists',
-          'Would you like to overwrite your other Apiary?',
-          [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-              onPress: () => navigation.goBack(),
-            },
-            {text: 'OK', onPress: () => pushData(downloadlink)},
-          ],
-        );
-      } else {
-        pushData(downloadlink);
-      }
-    });
-    // Apiary addition complete
-  }
+    const apiaryId = (
+      await firestore().collection('Users').doc(uid).get()
+    ).data().apiaryId;
+    console.log(apiaryId);
 
-  async function pushData(downloadlink) {
-    const apiaryPath = firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
+    firestore()
       .collection('Apiaries')
-      .doc(name);
-    
-    apiaryPath
-      .set({
+      .add({
         name: name,
         latitude: latitude,
         longitude: longitude,
@@ -194,27 +167,20 @@ export default function CreateApiary({navigation}) {
         downloadurl: downloadlink,
         city: city,
         country: country,
-        sharing: []
+        hives: [],
+        user: uid,
+        apiaryId: apiaryId,
       })
       .then(() => {
-        apiaryPath
-          .collection('Hives')
-          .get()
-          .then(querySnapshot => {
-            querySnapshot.docs.map(item => {
-              var name = item.data()['name'];
-              apiaryPath
-                .collection('Hives')
-                .doc(name)
-                .delete()
-                .then(() => {
-                });
-            });
+        firestore()
+          .collection('Users')
+          .doc(uid)
+          .update({
+            apiaryId: apiaryId + 1,
+          })
+          .then(() => {
+            navigation.goBack();
           });
-        navigation.goBack();
-      })
-      .catch(e => {
-        console.log(e);
       });
   }
 

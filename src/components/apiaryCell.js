@@ -14,17 +14,19 @@ import auth from '@react-native-firebase/auth';
 
 export default function ApiaryCell(props) {
   const data = props.data;
-  useEffect(() => {
-
-  }, []);
+  useEffect(() => {}, []);
   async function deleteApiary() {
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
+    var ref = firestore()
       .collection('Apiaries')
-      .doc(data['name'])
-      .delete()
-      .then(() => {});
+      .where('name', '==', data.name)
+      .where('apiaryId', '==', data.apiaryId);
+
+    var apiaryId;
+    (await ref.get()).forEach(data => {
+      apiaryId = data.id;
+    });
+
+    firestore().collection('Apiaries').doc(apiaryId).delete();
   }
   const uri = data.downloadurl;
   return (

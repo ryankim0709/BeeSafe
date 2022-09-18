@@ -54,8 +54,6 @@ export default function Home({navigation}) {
 
     // If the data changes, get the data again
     const dataListener = firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
       .collection('Apiaries')
       .onSnapshot(logData, onError);
     //getData();
@@ -79,11 +77,11 @@ export default function Home({navigation}) {
 
   async function getData() {
     var dataTemp = [];
+    var uid = auth().currentUser.uid;
     // Getting data
     firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
       .collection('Apiaries')
+      .where('user', '==', uid)
       .get()
       .then(querySnapshot => {
         querySnapshot.forEach(doc => {
@@ -99,9 +97,8 @@ export default function Home({navigation}) {
     querry = querry.toLowerCase();
     dataTemp = [];
     firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
       .collection('Apiaries')
+      .where('user', '==', uid)
       .get()
       .then(querySnapshot => {
         querySnapshot.forEach(doc => {
@@ -120,15 +117,17 @@ export default function Home({navigation}) {
     // using auth().currentUser is faster than user.
     var displayname = auth().currentUser.displayName;
     var email = auth().currentUser.email;
+    var uid = auth().currentUser.uid;
 
     // Initialize new user with email and name
     firestore()
       .collection(`Users`)
-      .doc(email)
+      .doc(uid)
       .set({
         email: email,
         name: displayname,
-        sharing: []
+        sharing: [],
+        apiaryId: 0
       })
       .then(() => {});
   }
@@ -168,10 +167,7 @@ export default function Home({navigation}) {
         }}>
         {data.map((data, key) => (
           <View style={styles.apiaryContainer} key={key}>
-            <ApiaryCell
-              data={data}
-              navigation={navigation}
-            />
+            <ApiaryCell data={data} navigation={navigation} />
           </View>
         ))}
       </ScrollView>
