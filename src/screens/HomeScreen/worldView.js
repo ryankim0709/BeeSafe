@@ -47,6 +47,7 @@ export default function WorldView({route}) {
       .then(res => {
         res.forEach(user => {
           var data = user.data();
+          console.log(data, data['sharing'].length);
           if (
             data['sharing'].length > 0 ||
             data['email'] === auth().currentUser.email
@@ -102,17 +103,17 @@ export default function WorldView({route}) {
             user === auth().currentUser.email ||
             sharing.includes(hive.data()['name'])
           ) {
-            var hive = hive.data();
-            var img =
-              hive['affected'] == 'true'
-                ? require('../../assets/img/varroa.png')
-                : require('../../assets/img/bee.png');
+            var hiveData = hive.data();
+            console.log(hiveData['affected']);
+            var img = hiveData['affected']
+              ? require('../../assets/img/varroa.png')
+              : require('../../assets/img/bee.png');
             var markerData = {
-              name: hive['name'],
-              affected: hive['affected'],
+              name: hiveData['name'],
+              affected: hiveData['affected'],
               coords: {
-                latitude: hive['latitude'],
-                longitude: hive['longitude'],
+                latitude: hiveData['latitude'],
+                longitude: hiveData['longitude'],
               },
               img: img,
             };
@@ -123,13 +124,6 @@ export default function WorldView({route}) {
       .then(() => {
         setHiveData(data);
       });
-  }
-
-  async function getMyData() {
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries');
   }
 
   async function getCurrLocation() {

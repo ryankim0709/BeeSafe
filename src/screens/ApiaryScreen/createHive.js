@@ -190,6 +190,7 @@ export default function CreateHive({navigation, route}) {
         latitude: lat,
         longitude: lon,
         checkdates: [],
+        affected: false
       })
       .then(() => { 
         navigation.navigate('ApiaryBottomTabs', {

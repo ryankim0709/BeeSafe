@@ -51,6 +51,7 @@ export default function ViewHive({navigation, route}) {
   const [uri, setUri] = useState(image?.assets && image.assets[0].uri);
   const [errorMessage, setErrorMessage] = useState();
   const [modalIsVisible, setModalIsVisible] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   const [init, setInit] = useState(true);
   const [changed, setChanged] = useState(false);
@@ -77,8 +78,23 @@ export default function ViewHive({navigation, route}) {
       setType(hiveData['type']);
       setNotes(hiveData['notes']);
       setInit(false);
+
+      firestore()
+        .collection('Users')
+        .doc(auth().currentUser.email)
+        .collection('Apiaries')
+        .doc(apiaryData['name'])
+        .get()
+        .then(res => {
+          var sharing = res.data()['sharing'];
+          if (sharing.includes(hiveData['name'])) {
+            setSharing(true);
+          } else {
+            setSharing(false);
+          }
+        });
     }
-  }, [image]);
+  }, [image, sharing]);
 
   async function selectImage() {
     // Launch image library for image selection
@@ -109,7 +125,7 @@ export default function ViewHive({navigation, route}) {
     // Error handling
     if (!name) {
       setModalIsVisible(true);
-      setErrorMessage('Please add your apiary name');
+      setErrorMessage('Please add your hive name');
       return;
     }
     if (!frames) {
@@ -195,6 +211,75 @@ export default function ViewHive({navigation, route}) {
       });
     // Hive addition complete
   };
+
+  async function reportHive() {
+    firestore()
+      .collection('Users')
+      .doc(auth().currentUser.email)
+      .collection('Apiaries')
+      .doc(apiaryData['name'])
+      .get()
+      .then(res => {
+        var sharingData = res.data()['sharing'];
+        if (!sharingData.includes(hiveData['name'])) {
+          sharingData.push(hiveData['name']);
+        }
+        firestore()
+          .collection('Users')
+          .doc(auth().currentUser.email)
+          .collection('Apiaries')
+          .doc(apiaryData['name'])
+          .update({sharing: sharingData});
+      });
+
+    firestore()
+      .collection('Users')
+      .doc(auth().currentUser.email)
+      .get()
+      .then(res => {
+        var sharingData = res.data()['sharing'];
+        if (!sharingData.includes(apiaryData['name'])) {
+          sharingData.push(apiaryData['name']);
+        }
+        firestore()
+          .collection('Users')
+          .doc(auth().currentUser.email)
+          .update({sharing: sharingData});
+      });
+  }
+
+  async function stopReport() {
+    console.log('here');
+    firestore()
+      .collection('Users')
+      .doc(auth().currentUser.email)
+      .collection('Apiaries')
+      .doc(apiaryData['name'])
+      .get()
+      .then(res => {
+        var sharingData = res.data()['sharing'];
+        sharingData.pop(hiveData['name']);
+        firestore()
+          .collection('Users')
+          .doc(auth().currentUser.email)
+          .collection('Apiaries')
+          .doc(apiaryData['name'])
+          .update({sharing: sharingData});
+      });
+
+    firestore()
+      .collection('Users')
+      .doc(auth().currentUser.email)
+      .get()
+      .then(res => {
+        var sharingData = res.data()['sharing'];
+        sharingData.pop(apiaryData['name']);
+        firestore()
+          .collection('Users')
+          .doc(auth().currentUser.email)
+          .update({sharing: sharingData});
+      });
+  }
 
   if (!ready) return null;
   return (
@@ -317,11 +402,24 @@ export default function ViewHive({navigation, route}) {
 
           {/* Create & Cancel buttons container*/}
           <View style={styles.saveContainer}>
-            {/* Create button */}
+            {/* Report button */}
             <TouchableOpacity
               style={[styles.saveButton, {backgroundColor: '#EEC746'}]}
-              onPress={saveChanges}>
-              <Text style={[styles.saveText, {color: 'white'}]}>Save</Text>
+              onPress={() => {
+                if (sharing) {
+                  setSharing(false);
+                  stopReport();
+                } else {
+                  setSharing(true);
+                  reportHive();
+                }
+              }}>
+              <Text
+                style={[styles.saveText, {color: '#FFFFFF'}]}
+                numberOfLines={1}
+                adjustsFontSizeToFit>
+                {sharing ? 'Stop Reporting' : 'Report'}
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -484,6 +582,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat',
     fontWeight: '600',
     fontSize: 18,
+    padding: 2,
   },
   // Modal main content container
   modalView: {
