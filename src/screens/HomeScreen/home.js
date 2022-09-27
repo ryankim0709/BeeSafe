@@ -30,7 +30,7 @@ export default function Home({navigation}) {
       getData();
 
       return () => {
-        setData();
+        setData([]);
       };
     }, []),
   );
@@ -98,7 +98,7 @@ export default function Home({navigation}) {
     dataTemp = [];
     firestore()
       .collection('Apiaries')
-      .where('user', '==', uid)
+      .where('user', '==', auth().currentUser.uid)
       .get()
       .then(querySnapshot => {
         querySnapshot.forEach(doc => {
@@ -127,7 +127,8 @@ export default function Home({navigation}) {
         email: email,
         name: displayname,
         sharing: [],
-        apiaryId: 0
+        apiaryId: 0,
+        uid: uid,
       })
       .then(() => {});
   }

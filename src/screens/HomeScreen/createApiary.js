@@ -152,10 +152,9 @@ export default function CreateApiary({navigation}) {
 
     var uid = auth().currentUser.uid;
 
-    const apiaryId = (
+    const userApiaryId = (
       await firestore().collection('Users').doc(uid).get()
     ).data().apiaryId;
-    console.log(apiaryId);
 
     firestore()
       .collection('Apiaries')
@@ -169,16 +168,32 @@ export default function CreateApiary({navigation}) {
         country: country,
         hives: [],
         user: uid,
-        apiaryId: apiaryId,
+        userApiaryId: userApiaryId,
+        apiaryId: '',
       })
       .then(() => {
         firestore()
           .collection('Users')
           .doc(uid)
           .update({
-            apiaryId: apiaryId + 1,
+            userApiaryId: userApiaryId + 1,
           })
           .then(() => {
+            firestore()
+              .collection('Apiaries')
+              .where('user', '==', uid)
+              .where('userApiaryId', '==', userApiaryId)
+              .get()
+              .then(data => {
+                var apiaryId = '';
+                data.forEach(doc => {
+                  apiaryId = doc.id;
+                });
+                firestore()
+                  .collection('Apiaries')
+                  .doc(apiaryId)
+                  .update({apiaryId: apiaryId});
+              });
             navigation.goBack();
           });
       });

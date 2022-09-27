@@ -13,9 +13,10 @@ import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-import storage from '@react-native-firebase/storage';
+import storage, {firebase} from '@react-native-firebase/storage';
 
 export default function DiseaseScan({navigation, route}) {
+  const hiveId = route.hiveData.hiveId;
   const apiaryData = route['apiaryData'];
   const hiveData = route['hiveData'];
   const [frameCheck, setFrameCheck] = useState([]);
@@ -73,6 +74,16 @@ export default function DiseaseScan({navigation, route}) {
       console.error(e);
     }
 
+    console.log(filename);
+    const uploadModel = storage()
+      .ref('test_img/' + filename)
+      .putFile(uploadUri);
+    try {
+      await uploadModel;
+    } catch (e) {
+      console.error(e);
+    }
+
     const downloadlink = (
       await storage().ref(filename).getDownloadURL()
     ).toString();
@@ -87,52 +98,15 @@ export default function DiseaseScan({navigation, route}) {
     var monthNum = String(today.getMonth() + 1);
     var year = String(today.getFullYear());
 
-    var dayString = `${monthNum}$${day}$${year}`;
-    var time = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
+    var dayString = `${monthNum}.${day}.${year}`;
 
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
-      .collection('Hives')
-      .doc(hiveData['name'])
-      .get()
-      .then(res => {
-        var checkDates = res.data()['checkdates'];
-        if (checkDates[0] === '') {
-          checkDates = [];
-        }
-        if (!checkDates.includes(dayString)) {
-          checkDates.push(dayString);
-        }
-        firestore()
-          .collection('Users')
-          .doc(auth().currentUser.email)
-          .collection('Apiaries')
-          .doc(apiaryData['name'])
-          .collection('Hives')
-          .doc(hiveData['name'])
-          .update({
-            checkdates: checkDates,
-          })
-          .then(() => {});
-      });
-
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
-      .collection('Hives')
-      .doc(hiveData['name'])
-      .collection(dayString)
-      .doc(time)
-      .set({
-        downloadurl: downloadlink,
-        result: result,
-      })
-      .then(() => {});
+    const data = {date: dayString, downloadurl: downloadlink, result: result};
+    var checksData = hiveData.checks;
+    checksData.push(data);
+    console.log(checksData);
+    firestore().collection('Hives').doc(hiveId).update({
+      checks: checksData,
+    });
   }
 
   async function updateHive() {
@@ -155,20 +129,9 @@ export default function DiseaseScan({navigation, route}) {
     var year = String(today.getFullYear());
 
     firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
       .collection('Hives')
-      .doc(hiveData['name'])
-      .update({
-        day: day,
-        month: month,
-        year: year,
-      })
-      .then(() => {
-        return;
-      });
+      .doc(hiveId)
+      .update({month: month, day: day, year: year});
   }
 
   async function reportHive() {

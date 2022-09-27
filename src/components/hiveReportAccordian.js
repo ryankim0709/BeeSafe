@@ -7,56 +7,16 @@ import firestore from '@react-native-firebase/firestore';
 import {Dimensions} from 'react-native';
 
 export default function HiveReportAccordian(props) {
-  const apiaryData = props['data']['apiaryData'];
-  const hiveData = props['data']['hiveData'];
+  const hiveId = props.data.hiveId;
+
   const [date, setDate] = useState('');
-  const [data, setData] = useState([]);
+  const data = props.data
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    setDate(props['date'].replaceAll('$', '/'));
-
-    const dataListener = firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
-      .collection('Hives')
-      .doc(hiveData['name'])
-      .collection(props['date'])
-      .onSnapshot(getData, onError);
-
-    return () => {
-      dataListener;
-    };
+    console.log(props.data.date);
+    setDate(props.data.date.replaceAll('.', '/'));
   }, []);
 
-  function onError(error) {
-    console.error(error);
-  }
-
-  async function getData() {
-    var dataTemp = [];
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
-      .collection('Hives')
-      .doc(hiveData['name'])
-      .collection(props['date'])
-      .get()
-      .then(res => {
-        console.log('ALL THE DATA');
-        res.forEach((data, key) => {
-          console.log(data.data());
-          dataTemp.push(data.data());
-        });
-        setData(dataTemp);
-      })
-      .then(() => {
-        console.log('COMPLETE');
-      });
-  }
   return (
     <View style={styles.container}>
       <View style={styles.date}>
@@ -76,9 +36,9 @@ export default function HiveReportAccordian(props) {
       </View>
       <ScrollView>
         {open &&
-          data.map((data, key) => (
-            <View style={styles.contentContainer} key={key}>
-              <Image source={{uri: data['downloadurl']}} style={styles.image} />
+           (
+            <View style={styles.contentContainer}>
+              <Image source={{uri: data.downloadurl}} style={styles.image} />
               {data['result'] && (
                 <Feather
                   name="check-square"
@@ -94,7 +54,7 @@ export default function HiveReportAccordian(props) {
                 />
               )}
             </View>
-          ))}
+          )}
       </ScrollView>
     </View>
   );

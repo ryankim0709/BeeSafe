@@ -18,7 +18,7 @@ import Banner from '../../components/banner';
 import Icon from 'react-native-vector-icons/Feather';
 
 // Image storage imports
-import storage from '@react-native-firebase/storage';
+import storage, {firebase} from '@react-native-firebase/storage';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 
 // Auth imports
@@ -31,6 +31,8 @@ import {useFocusEffect} from '@react-navigation/native';
 import DropDownPicker from 'react-native-dropdown-picker';
 
 export default function ViewHive({navigation, route}) {
+  const hiveId = route.hiveData.hiveId;
+
   // Dropdown states
   const [open, setOpen] = useState(false);
   const [hiveTypes, setHiveTypes] = useState([
@@ -79,20 +81,8 @@ export default function ViewHive({navigation, route}) {
       setNotes(hiveData['notes']);
       setInit(false);
 
-      firestore()
-        .collection('Users')
-        .doc(auth().currentUser.email)
-        .collection('Apiaries')
-        .doc(apiaryData['name'])
-        .get()
-        .then(res => {
-          var sharing = res.data()['sharing'];
-          if (sharing.includes(hiveData['name'])) {
-            setSharing(true);
-          } else {
-            setSharing(false);
-          }
-        });
+      var isSharing = hiveData.sharing;
+      setSharing(isSharing);
     }
   }, [image, sharing]);
 
@@ -121,164 +111,8 @@ export default function ViewHive({navigation, route}) {
     launchCamera(options, setImage);
   }
 
-  const saveChanges = async () => {
-    // Error handling
-    if (!name) {
-      setModalIsVisible(true);
-      setErrorMessage('Please add your hive name');
-      return;
-    }
-    if (!frames) {
-      setModalIsVisible(true);
-      setErrorMessage('Please add the number of frames in your hive');
-      return;
-    }
-    if (!type) {
-      setModalIsVisible(true);
-      setErrorMessage('Please add the type of your hive');
-      return;
-    }
-
-    var downloadlink = '';
-    // Image upload
-    if (changed) {
-      const filename = uri.substring(uri.lastIndexOf('/') + 1);
-      const uploadUri =
-        Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
-      const task = storage().ref(filename).putFile(uploadUri);
-      try {
-        await task;
-      } catch (e) {
-        console.error(e);
-      }
-      setImage(null);
-      // Image upload complete
-
-      // Get download link
-      downloadlink = (
-        await storage().ref(filename).getDownloadURL()
-      ).toString();
-      try {
-        await downloadlink;
-      } catch (e) {
-        console.error(e);
-      }
-      var finalNotes = notes;
-      if (!finalNotes) {
-        finalNotes = '';
-      }
-    } else {
-      downloadlink = uri;
-    }
-
-    // Add apiary to firestore
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
-      .collection('Hives')
-      .doc(hiveData['name'])
-      .delete()
-      .then(() => {
-        firestore()
-          .collection('Users')
-          .doc(auth().currentUser.email)
-          .collection('Apiaries')
-          .doc(apiaryData['name'])
-          .collection('Hives')
-          .doc(name)
-          .set({
-            name: name,
-            frames: frames,
-            type: type,
-            notes: finalNotes,
-            downloadurl: downloadlink,
-            day: hiveData['day'],
-            month: hiveData['month'],
-            year: hiveData['year'],
-            latitude: hiveData['latitude'],
-            longitude: hiveData['longitude'],
-            checkDates: hiveData['checkdates'],
-          })
-          .then(() => {})
-          .catch(e => {
-            console.log(e);
-          });
-      })
-      .catch(e => {
-        console.log(e);
-      });
-    // Hive addition complete
-  };
-
-  async function reportHive() {
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
-      .get()
-      .then(res => {
-        var sharingData = res.data()['sharing'];
-        if (!sharingData.includes(hiveData['name'])) {
-          sharingData.push(hiveData['name']);
-        }
-        firestore()
-          .collection('Users')
-          .doc(auth().currentUser.email)
-          .collection('Apiaries')
-          .doc(apiaryData['name'])
-          .update({sharing: sharingData});
-      });
-
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .get()
-      .then(res => {
-        var sharingData = res.data()['sharing'];
-        if (!sharingData.includes(apiaryData['name'])) {
-          sharingData.push(apiaryData['name']);
-        }
-        firestore()
-          .collection('Users')
-          .doc(auth().currentUser.email)
-          .update({sharing: sharingData});
-      });
-  }
-
-  async function stopReport() {
-    console.log('here');
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
-      .get()
-      .then(res => {
-        var sharingData = res.data()['sharing'];
-        sharingData.pop(hiveData['name']);
-        firestore()
-          .collection('Users')
-          .doc(auth().currentUser.email)
-          .collection('Apiaries')
-          .doc(apiaryData['name'])
-          .update({sharing: sharingData});
-      });
-
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .get()
-      .then(res => {
-        var sharingData = res.data()['sharing'];
-        sharingData.pop(apiaryData['name']);
-        firestore()
-          .collection('Users')
-          .doc(auth().currentUser.email)
-          .update({sharing: sharingData});
-      });
+  async function switchReport() {
+    firestore().collection('Hives').doc(hiveId).update({sharing: !sharing});
   }
 
   if (!ready) return null;
@@ -406,13 +240,8 @@ export default function ViewHive({navigation, route}) {
             <TouchableOpacity
               style={[styles.saveButton, {backgroundColor: '#EEC746'}]}
               onPress={() => {
-                if (sharing) {
-                  setSharing(false);
-                  stopReport();
-                } else {
-                  setSharing(true);
-                  reportHive();
-                }
+                setSharing(!sharing);
+                switchReport();
               }}>
               <Text
                 style={[styles.saveText, {color: '#FFFFFF'}]}

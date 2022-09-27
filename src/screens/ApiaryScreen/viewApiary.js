@@ -15,16 +15,15 @@ import HiveCell from '../../components/hiveCell';
 
 // Auth imports
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import firestore, {firebase} from '@react-native-firebase/firestore';
 
 // Navigation imports
 import {useFocusEffect} from '@react-navigation/native';
 
 export default function ViewApiary({route, navigation}) {
-  const apiaryData = route['data'];
+  const apiaryData = route.data;
   const uri = apiaryData['downloadurl']; // Cover image uri
   const [data, setData] = useState([]); // Apiary image
-  const apiaryName = apiaryData['name'];
 
   async function onAuthStateChanged(user) {
     if (!user) {
@@ -42,17 +41,10 @@ export default function ViewApiary({route, navigation}) {
   );
 
   useEffect(() => {
-    // Get initial data
-    getData();
-
     // Auth state change
     const authChange = auth().onAuthStateChanged(onAuthStateChanged);
     // If the data changes, get the data again
     const dataListener = firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryName)
       .collection('Hives')
       .onSnapshot(logData, onError);
 
@@ -68,28 +60,23 @@ export default function ViewApiary({route, navigation}) {
 
   function logData(QuerySnapshot) {
     var dataTemp = [];
+    var uid = auth().currentUser.uid;
+    var apiaryId = route.data.apiaryId;
     QuerySnapshot.forEach(doc => {
-      dataTemp.push(doc.data());
+      var data = doc.data();
+      if (data.user === uid && data.apiaryId === apiaryId) {
+        dataTemp.push(data);
+      }
     });
     setData(dataTemp);
   }
 
   async function getData() {
-    var dataTemp = [];
     firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryName)
       .collection('Hives')
       .get()
-      .then(querySnapshot => {
-        querySnapshot.forEach(doc => {
-          dataTemp.push(doc.data());
-        });
-      })
-      .then(() => {
-        setData(dataTemp);
+      .then(res => {
+        logData(res);
       });
   }
 

@@ -14,15 +14,7 @@ export default function HiveCell(route) {
   useEffect(() => {});
 
   async function deleteHive() {
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
-      .collection('Hives')
-      .doc(hiveData['name'])
-      .delete()
-      .then(() => {});
+    firestore().collection('Hives').doc(hiveData.hiveId).delete();
   }
 
   return (

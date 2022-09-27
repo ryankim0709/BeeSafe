@@ -3,6 +3,7 @@ import React, {useState, useEffect} from 'react';
 import {View, StyleSheet, Text, TouchableOpacity, Image} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/AntDesign';
+import firestore from '@react-native-firebase/firestore';
 
 // Authentication imports
 import auth from '@react-native-firebase/auth';
@@ -32,10 +33,19 @@ async function onGoogleButtonPress() {
 }
 
 export default function Login({navigation}) {
-
   // Auth state change handler
   function onAuthStateChanged(user) {
-    if (user) navigation.navigate('HomeBottomTabs');
+    if (user) {
+      var dataTemp;
+      var uid = auth().currentUser.uid;
+      firestore()
+        .collection('Users')
+        .doc(uid)
+        .get()
+        .then(res => {
+          navigation.navigate('HomeBottomTabs', {data: res.data()});
+        });
+    }
   }
 
   useEffect(() => {

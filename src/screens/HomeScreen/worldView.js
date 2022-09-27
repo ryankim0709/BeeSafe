@@ -7,6 +7,7 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import RNLocation from 'react-native-location';
 import Feather from 'react-native-vector-icons/Feather';
+import {useFocusEffect} from '@react-navigation/native';
 
 RNLocation.configure({
   distanceFilter: 0,
@@ -17,113 +18,93 @@ RNLocation.configure({
 });
 
 export default function WorldView({route}) {
-  const [lat, setLat] = useState(0);
-  const [lon, setLong] = useState(0);
+  const userUid = route.data.uid;
   const [init, setInit] = useState(false);
   const [hiveData, setHiveData] = useState();
+  const [region, setRegion] = useState({});
 
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    firestore()
-      .collection('Users')
-      .get()
-      .then(res => {
-        res.forEach(user => {});
-      })
-      .then(() => {
-        getCurrLocation().then(() => {
-          getData().then(() => {
-            setInit(true);
-          });
-        });
+    getData().then(() => {
+      getCurrLocation().then(() => {
+        setInit(true);
       });
+    });
   }, []);
-
-  async function getData() {
-    firestore()
-      .collection('Users')
-      .get()
-      .then(res => {
-        res.forEach(user => {
-          var data = user.data();
-          console.log(data, data['sharing'].length);
-          if (
-            data['sharing'].length > 0 ||
-            data['email'] === auth().currentUser.email
-          ) {
-            getApiaries(data['email'], data['sharing']);
-          }
-        });
-      });
-  }
-
-  async function getApiaries(user, sharing) {
-    if (user == auth().currentUser.email) {
+  function logData(QuerySnapshot) {
+    console.log('New Data');
+    var dataTemp = [];
+    QuerySnapshot.forEach(hive => {
+      const data = hive.data();
+      const apiaryId = data.apiaryId;
       firestore()
-        .collection('Users')
-        .doc(user)
         .collection('Apiaries')
+        .doc(apiaryId)
         .get()
-        .then(res => {
-          res.docs.map(apiary => {
-            getHiveData(user, apiary.data()['name'], []);
-          });
+        .then(apiary => {
+          const apiaryData = apiary.data();
+          const img = data.affected
+            ? require('../../assets/img/varroa.png')
+            : require('../../assets/img/bee.png');
+          const status = data.affected ? 'Infected' : 'Healthy';
+          const dataObj = {
+            name: data.name,
+            affected: status,
+            coords: {
+              latitude: apiaryData.latitude,
+              longitude: apiaryData.longitude,
+            },
+            img: img,
+          };
+          dataTemp.push(dataObj);
+          setHiveData(dataTemp);
         });
-    } else {
-      sharing.forEach(apiaryName => {
-        firestore()
-          .collection('Users')
-          .doc(user)
-          .collection('Apiaries')
-          .doc(apiaryName)
-          .get()
-          .then(res => {
-            var sharing = res.data()['sharing'];
-            getHiveData(user, apiaryName, sharing);
-          });
-      });
-    }
+    });
   }
 
-  async function getHiveData(user, apiaryName, sharing) {
-    var data = hiveData;
-    if (!hiveData) data = [];
+  function onError(e) {
+    console.log(e);
+  }
+  async function getData() {
+    var dataTemp = [];
+    var count = 0;
+    console.log('Getting Data');
 
-    firestore()
-      .collection('Users')
-      .doc(user)
-      .collection('Apiaries')
-      .doc(apiaryName)
-      .collection('Hives')
-      .get()
-      .then(res => {
-        res.forEach(hive => {
-          if (
-            user === auth().currentUser.email ||
-            sharing.includes(hive.data()['name'])
-          ) {
-            var hiveData = hive.data();
-            console.log(hiveData['affected']);
-            var img = hiveData['affected']
+    const path = firestore().collection('Hives').where('sharing', '==', true);
+    if ((await path.get()).size == 0) {
+      setHiveData([]);
+      return;
+    }
+    path.get().then(res => {
+      res.docs.forEach(hive => {
+        count = count + 1;
+        const data = hive.data();
+        const apiaryId = data.apiaryId;
+        firestore()
+          .collection('Apiaries')
+          .doc(apiaryId)
+          .get()
+          .then(apiary => {
+            const apiaryData = apiary.data();
+            const img = data.affected
               ? require('../../assets/img/varroa.png')
               : require('../../assets/img/bee.png');
-            var markerData = {
-              name: hiveData['name'],
-              affected: hiveData['affected'],
+            const status = data.affected ? 'Infected' : 'Healthy';
+            const dataObj = {
+              name: data.name,
+              affected: status,
               coords: {
-                latitude: hiveData['latitude'],
-                longitude: hiveData['longitude'],
+                latitude: apiaryData.latitude,
+                longitude: apiaryData.longitude,
               },
               img: img,
             };
-            data.push(markerData);
-          }
-        });
-      })
-      .then(() => {
-        setHiveData(data);
+            dataTemp.push(dataObj);
+            setHiveData(dataTemp);
+          });
       });
+    });
   }
 
   async function getCurrLocation() {
@@ -165,19 +146,18 @@ export default function WorldView({route}) {
       location = await RNLocation.getLatestLocation({timeout: 100});
       var lat = parseFloat(location['latitude']).toFixed(4).toString();
       var lon = parseFloat(location['longitude']).toFixed(4).toString();
-      setLat(lat);
-      setLong(lon);
+
+      const regionObject = {
+        latitude: lat,
+        longitude: lon,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      };
+      setRegion(regionObject);
     }
   }
 
-  if (!init || !hiveData) return null;
-
-  const region = {
-    latitude: lat,
-    longitude: lon,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  };
+  if (!init) return null;
   return (
     <View style={styles.container}>
       <MapView
@@ -186,21 +166,22 @@ export default function WorldView({route}) {
         ref={ref => {
           this.map = ref;
         }}>
-        {hiveData.map((hive, index) => {
-          return (
-            <Marker
-              key={index}
-              coordinate={hive['coords']}
-              title={hive['name']}
-              description={hive['affected']}>
-              <Image
-                source={hive['img']}
-                style={{width: 40, height: 40}}
-                resizeMode="contain"
-              />
-            </Marker>
-          );
-        })}
+        {hiveData &&
+          hiveData.map((hive, index) => {
+            return (
+              <Marker
+                key={index}
+                coordinate={hive['coords']}
+                title={hive['name']}
+                description={hive['affected']}>
+                <Image
+                  source={hive['img']}
+                  style={{width: 40, height: 40}}
+                  resizeMode="contain"
+                />
+              </Marker>
+            );
+          })}
       </MapView>
       <View
         style={{
@@ -257,6 +238,14 @@ export default function WorldView({route}) {
                 this.map.animateToRegion(region);
               }}>
               <Text style={styles.text}>Show my hives</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                getData().then(() => {
+                  //console.log(hiveData);
+                });
+              }}>
+              <Text style={styles.text}>Reload Data</Text>
             </TouchableOpacity>
           </View>
         )}
