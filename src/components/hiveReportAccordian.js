@@ -10,10 +10,9 @@ export default function HiveReportAccordian(props) {
   const hiveId = props.data.hiveId;
 
   const [date, setDate] = useState('');
-  const data = props.data
+  const data = props.data;
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    console.log(props.data.date);
     setDate(props.data.date.replaceAll('.', '/'));
   }, []);
 
@@ -35,26 +34,25 @@ export default function HiveReportAccordian(props) {
         </TouchableOpacity>
       </View>
       <ScrollView>
-        {open &&
-           (
-            <View style={styles.contentContainer}>
-              <Image source={{uri: data.downloadurl}} style={styles.image} />
-              {data['result'] && (
-                <Feather
-                  name="check-square"
-                  size={40}
-                  style={[styles.icon, {color: 'green'}]}
-                />
-              )}
-              {!data['result'] && (
-                <Feather
-                  name="x-square"
-                  size={40}
-                  style={[styles.icon, {color: 'red'}]}
-                />
-              )}
-            </View>
-          )}
+        {open && (
+          <View style={styles.contentContainer}>
+            <Image source={{uri: data.downloadurl}} style={styles.image} />
+            {data['result'] && (
+              <Feather
+                name="check-square"
+                size={40}
+                style={[styles.icon, {color: 'green'}]}
+              />
+            )}
+            {!data['result'] && (
+              <Feather
+                name="x-square"
+                size={40}
+                style={[styles.icon, {color: 'red'}]}
+              />
+            )}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -62,7 +60,8 @@ export default function HiveReportAccordian(props) {
 
 const styles = StyleSheet.create({
   container: {
-    width: '84.3457%',
+    width: '90%',
+    height: 350,
     marginTop: '2.8077%',
     alignSelf: 'center',
     borderColor: '#EEC746',
@@ -78,12 +77,13 @@ const styles = StyleSheet.create({
   contentContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    height: 400,
   },
   image: {
-    width: '70%',
-    height: Dimensions.get('window').height * 0.125,
+    width: 300,
+    height: 300,
     marginLeft: '5%',
-    borderRadius: 10,
+    borderRadius: 30,
     marginTop: '2.34%',
   },
   icon: {

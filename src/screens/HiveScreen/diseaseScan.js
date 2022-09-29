@@ -3,9 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Dimensions,
   ImageBackground,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import Banner from '../../components/banner';
 import Feather from 'react-native-vector-icons/Feather';
@@ -14,6 +15,7 @@ import {TouchableOpacity} from 'react-native-gesture-handler';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import storage, {firebase} from '@react-native-firebase/storage';
+import LinearGradient from 'react-native-linear-gradient';
 
 export default function DiseaseScan({navigation, route}) {
   const hiveId = route.hiveData.hiveId;
@@ -22,6 +24,7 @@ export default function DiseaseScan({navigation, route}) {
   const [frameCheck, setFrameCheck] = useState([]);
   const [uri, setUri] = useState();
   const [image, setImage] = useState();
+  const [loadingResults, setLoadingResults] = useState(false);
 
   useEffect(() => {}, []);
 
@@ -65,6 +68,7 @@ export default function DiseaseScan({navigation, route}) {
   }
 
   async function uploadData(uri, result) {
+    setLoadingResults(true);
     const filename = uri.substring(uri.lastIndexOf('/') + 1);
     const uploadUri = Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
     const task = storage().ref(filename).putFile(uploadUri);
@@ -74,7 +78,7 @@ export default function DiseaseScan({navigation, route}) {
       console.error(e);
     }
 
-    console.log(filename);
+    // Upload to test
     const uploadModel = storage()
       .ref('test_img/' + filename)
       .putFile(uploadUri);
@@ -92,21 +96,47 @@ export default function DiseaseScan({navigation, route}) {
     } catch (e) {
       console.error(e);
     }
+    setTimeout(() => {
+      setLoadingResults(false);
+      var dotIndex = filename.indexOf('.');
+      var fileId = filename.substring(0, dotIndex);
 
-    var today = new Date();
-    var day = String(today.getDate());
-    var monthNum = String(today.getMonth() + 1);
-    var year = String(today.getFullYear());
+      firestore()
+        .collection('images')
+        .doc(fileId)
+        .get()
+        .then(res => {
+          if (!res.exists) {
+            console.log('Not ready');
+            return;
+          } else {
+            console.log(fileId);
+            var today = new Date();
+            var day = String(today.getDate());
+            var monthNum = String(today.getMonth() + 1);
+            var year = String(today.getFullYear());
 
-    var dayString = `${monthNum}.${day}.${year}`;
+            var dayString = `${monthNum}.${day}.${year}`;
 
-    const data = {date: dayString, downloadurl: downloadlink, result: result};
-    var checksData = hiveData.checks;
-    checksData.push(data);
-    console.log(checksData);
-    firestore().collection('Hives').doc(hiveId).update({
-      checks: checksData,
-    });
+            const data = {
+              date: dayString,
+              downloadurl: downloadlink,
+              result: result,
+            };
+            var checksData = hiveData.checks;
+            checksData.push(data);
+            firestore()
+              .collection('Hives')
+              .doc(hiveId)
+              .update({
+                checks: checksData,
+              })
+              .then(() => {
+                return;
+              });
+          }
+        });
+    }, 15000);
   }
 
   async function updateHive() {
@@ -234,6 +264,24 @@ export default function DiseaseScan({navigation, route}) {
           </Text>
         </TouchableOpacity>
       </View>
+      <Modal
+        transparent={true}
+        animationType={'slide'}
+        visible={loadingResults}
+        onRequestClose={() => {
+          setLoadingResults(!loadingResults);
+        }}>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <View style={styles.modalView}>
+            <Text style={styles.loadingText}>Loading Results</Text>
+            <ActivityIndicator
+              style={{marginTop: 10}}
+              size="large"
+              color="#EEC746"
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -297,5 +345,36 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat',
     fontWeight: '600',
     fontSize: 18,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    paddingLeft: 35,
+    paddingRight: 35,
+    paddingTop: 20,
+    paddingBottom: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    textAlign: 'center',
+  },
+  closeButtonContainer: {
+    borderRadius: 15,
+    paddingLeft: 10,
+    paddingRight: 10,
+    paddingTop: 5,
+    paddingBottom: 5,
+    marginTop: 10,
+  },
+  loadingText: {
+    fontFamily: 'Montserrat',
+    fontWeight: '600',
   },
 });
