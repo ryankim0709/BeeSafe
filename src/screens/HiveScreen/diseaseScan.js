@@ -3,9 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Dimensions,
   ImageBackground,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import Banner from '../../components/banner';
 import Feather from 'react-native-vector-icons/Feather';
@@ -13,16 +14,36 @@ import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-import storage from '@react-native-firebase/storage';
+import storage, {firebase} from '@react-native-firebase/storage';
+import LinearGradient from 'react-native-linear-gradient';
+import {useFocusEffect} from '@react-navigation/native';
 
 export default function DiseaseScan({navigation, route}) {
+  const hiveId = route.hiveData.hiveId;
   const apiaryData = route['apiaryData'];
   const hiveData = route['hiveData'];
   const [frameCheck, setFrameCheck] = useState([]);
   const [uri, setUri] = useState();
   const [image, setImage] = useState();
+  const [loadingResults, setLoadingResults] = useState(false);
+  const [sharing, setSharing] = useState();
+  const [resultsBack, setResultsBack] = useState(false);
+  const [resultData, setResultData] = useState();
 
-  useEffect(() => {}, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      firestore()
+        .collection('Hives')
+        .doc(hiveId)
+        .get()
+        .then(res => {
+          setSharing(res.data().sharing);
+        });
+    }),
+  );
+  useEffect(() => {
+    setSharing(hiveData.sharing);
+  }, [route]);
 
   async function selectImage() {
     // Launch image library for image selection
@@ -64,11 +85,22 @@ export default function DiseaseScan({navigation, route}) {
   }
 
   async function uploadData(uri, result) {
+    setLoadingResults(true);
     const filename = uri.substring(uri.lastIndexOf('/') + 1);
     const uploadUri = Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
     const task = storage().ref(filename).putFile(uploadUri);
     try {
       await task;
+    } catch (e) {
+      console.error(e);
+    }
+
+    // Upload to test
+    const uploadModel = storage()
+      .ref('test_img/' + filename)
+      .putFile(uploadUri);
+    try {
+      await uploadModel;
     } catch (e) {
       console.error(e);
     }
@@ -81,58 +113,58 @@ export default function DiseaseScan({navigation, route}) {
     } catch (e) {
       console.error(e);
     }
+    setTimeout(() => {
+      setLoadingResults(false);
+      var dotIndex = filename.indexOf('.');
+      var fileId = filename.substring(0, dotIndex);
 
-    var today = new Date();
-    var day = String(today.getDate());
-    var monthNum = String(today.getMonth() + 1);
-    var year = String(today.getFullYear());
+      firestore()
+        .collection('images')
+        .doc(fileId)
+        .get()
+        .then(res => {
+          if (!res.exists) {
+            console.log('Not ready');
+            return;
+          } else {
+            console.log(fileId);
+            firestore()
+              .collection('images')
+              .doc(fileId)
+              .get()
+              .then(res => {
+                setResultData(res.data());
+              })
+              .then(() => {
+                setResultsBack(true);
+              });
+            var today = new Date();
+            var day = String(today.getDate());
+            var monthNum = String(today.getMonth() + 1);
+            var year = String(today.getFullYear());
 
-    var dayString = `${monthNum}$${day}$${year}`;
-    var time = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
+            var dayString = `${monthNum}.${day}.${year}`;
 
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
-      .collection('Hives')
-      .doc(hiveData['name'])
-      .get()
-      .then(res => {
-        var checkDates = res.data()['checkdates'];
-        if (checkDates[0] === '') {
-          checkDates = [];
-        }
-        if (!checkDates.includes(dayString)) {
-          checkDates.push(dayString);
-        }
-        firestore()
-          .collection('Users')
-          .doc(auth().currentUser.email)
-          .collection('Apiaries')
-          .doc(apiaryData['name'])
-          .collection('Hives')
-          .doc(hiveData['name'])
-          .update({
-            checkdates: checkDates,
-          })
-          .then(() => {});
-      });
-
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
-      .collection('Hives')
-      .doc(hiveData['name'])
-      .collection(dayString)
-      .doc(time)
-      .set({
-        downloadurl: downloadlink,
-        result: result,
-      })
-      .then(() => {});
+            const data = {
+              date: dayString,
+              downloadurl: downloadlink,
+              result: result,
+              fileId: fileId,
+            };
+            var checksData = hiveData.checks;
+            checksData.push(data);
+            firestore()
+              .collection('Hives')
+              .doc(hiveId)
+              .update({
+                checks: checksData,
+              })
+              .then(() => {
+                return;
+              });
+          }
+        });
+    }, 20000);
   }
 
   async function updateHive() {
@@ -155,20 +187,9 @@ export default function DiseaseScan({navigation, route}) {
     var year = String(today.getFullYear());
 
     firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
       .collection('Hives')
-      .doc(hiveData['name'])
-      .update({
-        day: day,
-        month: month,
-        year: year,
-      })
-      .then(() => {
-        return;
-      });
+      .doc(hiveId)
+      .update({month: month, day: day, year: year});
   }
 
   async function reportHive() {
@@ -213,10 +234,10 @@ export default function DiseaseScan({navigation, route}) {
       <Banner text="Disease Scan" />
 
       <View>
-        <View style={styles.imageBoxContainer}>
+        <View style={[styles.imageBoxContainer, {height: 210}]}>
           <ImageBackground
             source={{uri: uri}}
-            style={[styles.imageBox, {justifyContent: 'flex-end'}]}
+            style={[styles.imageBox, {justifyContent: 'flex-end', height: 210}]}
             resizeMode="cover"
             imageStyle={{borderRadius: 10, width: '100%'}}>
             <View style={{flexDirection: 'row', alignSelf: 'flex-end'}}>
@@ -241,13 +262,38 @@ export default function DiseaseScan({navigation, route}) {
         </View>
 
         {/* Results box */}
-        {uri && (
-          <View style={styles.imageBoxContainer}>
+        {resultsBack && (
+          <View style={[styles.imageBoxContainer]}>
             <ImageBackground
               source={{uri: uri}}
               style={[styles.imageBox, {justifyContent: 'flex-end'}]}
               resizeMode="cover"
-              imageStyle={{borderRadius: 10, width: '100%'}}></ImageBackground>
+              imageStyle={{borderRadius: 10, width: '100%'}}>
+              {resultData.bbox.map((box, key) => {
+                var boundingBoxCoords = box.split(', ');
+                var x1 = parseInt(boundingBoxCoords[0]);
+                var y1 = parseInt(boundingBoxCoords[1]);
+                var x2 = parseInt(boundingBoxCoords[2]);
+                var y2 = parseInt(boundingBoxCoords[3]);
+                var w = x2 - x1;
+                var h = y2 - y1;
+                var color = 'green';
+                if (resultData.sickBBIdx.includes(key)) color = 'red';
+                return (
+                  <View
+                    key={key}
+                    style={{
+                      position: 'absolute',
+                      borderWidth: 2,
+                      width: w,
+                      height: h,
+                      top: y1,
+                      left: x1,
+                      borderColor: color,
+                    }}></View>
+                );
+              })}
+            </ImageBackground>
           </View>
         )}
       </View>
@@ -266,11 +312,32 @@ export default function DiseaseScan({navigation, route}) {
           onPress={() => {
             reportHive();
           }}>
-          <Text style={[styles.saveReportText, {color: '#EEC746'}]}>
-            Report
+          <Text
+            style={[styles.saveReportText, {color: '#EEC746'}]}
+            adjustsFontSizeToFit
+            numberOfLines={1}>
+            {sharing === true ? 'Stop reporting' : 'Report'}
           </Text>
         </TouchableOpacity>
       </View>
+      <Modal
+        transparent={true}
+        animationType={'slide'}
+        visible={loadingResults}
+        onRequestClose={() => {
+          setLoadingResults(!loadingResults);
+        }}>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <View style={styles.modalView}>
+            <Text style={styles.loadingText}>Loading Results</Text>
+            <ActivityIndicator
+              style={{marginTop: 10}}
+              size="large"
+              color="#EEC746"
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -291,8 +358,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   imageBox: {
-    width: '86%',
-    height: '100%',
+    width: 300,
+    height: 300,
     alignSelf: 'center',
     alignItems: 'center',
     flexDirection: 'row',
@@ -302,13 +369,12 @@ const styles = StyleSheet.create({
   },
   imageBoxContainer: {
     width: '100%',
-    height: Dimensions.get('window').height * 0.3,
+    height: 300,
     marginTop: '2.3758%',
     borderRadius: 10,
     alignSelf: 'center',
     alignItems: 'center',
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
   },
   saveReportContainer: {
     width: '54.9065%',
@@ -334,5 +400,37 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat',
     fontWeight: '600',
     fontSize: 18,
+    padding: 2,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    paddingLeft: 35,
+    paddingRight: 35,
+    paddingTop: 20,
+    paddingBottom: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    textAlign: 'center',
+  },
+  closeButtonContainer: {
+    borderRadius: 15,
+    paddingLeft: 10,
+    paddingRight: 10,
+    paddingTop: 5,
+    paddingBottom: 5,
+    marginTop: 10,
+  },
+  loadingText: {
+    fontFamily: 'Montserrat',
+    fontWeight: '600',
   },
 });

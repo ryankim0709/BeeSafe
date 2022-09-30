@@ -7,27 +7,32 @@ import HiveReportAccordian from '../../components/hiveReportAccordian';
 import {ScrollView} from 'react-native-gesture-handler';
 
 export default function HiveReport({route}) {
-  const apiaryData = route['apiaryData'];
-  const hiveData = route['hiveData'];
-  const [dates, setDates] = useState([]);
+  const hiveId = route.hiveData.hiveId;
+  const [data, setData] = useState([]);
   useEffect(() => {
-    getDates();
-  }, []);
+    getData();
 
-  async function getDates() {
-    var dates = [];
-
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
+    const dataListener = firestore()
       .collection('Hives')
-      .doc(hiveData['name'])
+      .doc(hiveId)
+      .onSnapshot(getData, onError);
+
+    return () => {
+      dataListener;
+    };
+  }, []);
+  function onError(error) {
+    console.error(error);
+  }
+
+  async function getData() {
+    firestore()
+      .collection('Hives')
+      .doc(hiveId)
       .get()
       .then(res => {
-        dates = res.data()['checkdates'];
-        setDates(dates);
+        const checks = res.data().checks;
+        setData(checks);
       });
   }
   return (
@@ -35,8 +40,8 @@ export default function HiveReport({route}) {
       <Banner text="Hive Report" />
 
       <ScrollView>
-        {dates.map((data, key) => (
-          <HiveReportAccordian key={key} date={data} data={route} />
+        {data.map((data, key) => (
+          <HiveReportAccordian key={key} data={data} />
         ))}
       </ScrollView>
       <View

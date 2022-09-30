@@ -1,5 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Image, ScrollView} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  ScrollView,
+  ImageBackground,
+} from 'react-native';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import Feather from 'react-native-vector-icons/Feather';
 import auth from '@react-native-firebase/auth';
@@ -7,56 +14,26 @@ import firestore from '@react-native-firebase/firestore';
 import {Dimensions} from 'react-native';
 
 export default function HiveReportAccordian(props) {
-  const apiaryData = props['data']['apiaryData'];
-  const hiveData = props['data']['hiveData'];
+  const hiveId = props.data.hiveId;
+
   const [date, setDate] = useState('');
-  const [data, setData] = useState([]);
+  const data = props.data;
   const [open, setOpen] = useState(false);
+  const [bbox, setbbox] = useState([]);
+  const [sickbboxId, setsickbboxId] = useState([]);
   useEffect(() => {
-    setDate(props['date'].replaceAll('$', '/'));
-
-    const dataListener = firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
-      .collection('Hives')
-      .doc(hiveData['name'])
-      .collection(props['date'])
-      .onSnapshot(getData, onError);
-
-    return () => {
-      dataListener;
-    };
-  }, []);
-
-  function onError(error) {
-    console.error(error);
-  }
-
-  async function getData() {
-    var dataTemp = [];
+    setDate(data.date.replaceAll('.', '/'));
     firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
-      .collection('Hives')
-      .doc(hiveData['name'])
-      .collection(props['date'])
+      .collection('images')
+      .doc(data.fileId)
       .get()
       .then(res => {
-        console.log('ALL THE DATA');
-        res.forEach((data, key) => {
-          console.log(data.data());
-          dataTemp.push(data.data());
-        });
-        setData(dataTemp);
-      })
-      .then(() => {
-        console.log('COMPLETE');
+        const imageData = res.data();
+        setbbox(imageData.bbox);
+        setsickbboxId(imageData.sickBBIdx);
       });
-  }
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.date}>
@@ -75,26 +52,52 @@ export default function HiveReportAccordian(props) {
         </TouchableOpacity>
       </View>
       <ScrollView>
-        {open &&
-          data.map((data, key) => (
-            <View style={styles.contentContainer} key={key}>
-              <Image source={{uri: data['downloadurl']}} style={styles.image} />
-              {data['result'] && (
-                <Feather
-                  name="check-square"
-                  size={40}
-                  style={[styles.icon, {color: 'green'}]}
-                />
-              )}
-              {!data['result'] && (
-                <Feather
-                  name="x-square"
-                  size={40}
-                  style={[styles.icon, {color: 'red'}]}
-                />
-              )}
-            </View>
-          ))}
+        {open && (
+          <View style={styles.contentContainer}>
+            <ImageBackground
+              source={{uri: data.downloadurl}}
+              style={styles.image}>
+              {bbox.map((box, key) => {
+                var boundingBoxCoords = box.split(', ');
+                var x1 = parseInt(boundingBoxCoords[0]);
+                var y1 = parseInt(boundingBoxCoords[1]);
+                var x2 = parseInt(boundingBoxCoords[2]);
+                var y2 = parseInt(boundingBoxCoords[3]);
+                var w = x2 - x1;
+                var h = y2 - y1;
+                var color = 'green';
+                if (sickbboxId.includes(key)) color = 'red';
+                return (
+                  <View
+                    key={key}
+                    style={{
+                      position: 'absolute',
+                      borderWidth: 2,
+                      width: w,
+                      height: h,
+                      top: y1,
+                      left: x1,
+                      borderColor: color,
+                    }}></View>
+                );
+              })}
+            </ImageBackground>
+            {data['result'] && (
+              <Feather
+                name="check-square"
+                size={40}
+                style={[styles.icon, {color: 'green'}]}
+              />
+            )}
+            {!data['result'] && (
+              <Feather
+                name="x-square"
+                size={40}
+                style={[styles.icon, {color: 'red'}]}
+              />
+            )}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -102,7 +105,7 @@ export default function HiveReportAccordian(props) {
 
 const styles = StyleSheet.create({
   container: {
-    width: '84.3457%',
+    width: '90%',
     marginTop: '2.8077%',
     alignSelf: 'center',
     borderColor: '#EEC746',
@@ -118,12 +121,13 @@ const styles = StyleSheet.create({
   contentContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    height: 320,
   },
   image: {
-    width: '70%',
-    height: Dimensions.get('window').height * 0.125,
+    width: 300,
+    height: 300,
     marginLeft: '5%',
-    borderRadius: 10,
+    borderRadius: 30,
     marginTop: '2.34%',
   },
   icon: {

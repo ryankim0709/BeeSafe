@@ -18,7 +18,7 @@ import Banner from '../../components/banner';
 import Icon from 'react-native-vector-icons/Feather';
 
 // Image storage imports
-import storage from '@react-native-firebase/storage';
+import storage, {firebase} from '@react-native-firebase/storage';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 
 // Auth imports
@@ -31,6 +31,8 @@ import {useFocusEffect} from '@react-navigation/native';
 import DropDownPicker from 'react-native-dropdown-picker';
 
 export default function ViewHive({navigation, route}) {
+  const hiveId = route.hiveData.hiveId;
+
   // Dropdown states
   const [open, setOpen] = useState(false);
   const [hiveTypes, setHiveTypes] = useState([
@@ -51,6 +53,7 @@ export default function ViewHive({navigation, route}) {
   const [uri, setUri] = useState(image?.assets && image.assets[0].uri);
   const [errorMessage, setErrorMessage] = useState();
   const [modalIsVisible, setModalIsVisible] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   const [init, setInit] = useState(true);
   const [changed, setChanged] = useState(false);
@@ -77,8 +80,11 @@ export default function ViewHive({navigation, route}) {
       setType(hiveData['type']);
       setNotes(hiveData['notes']);
       setInit(false);
+
+      var isSharing = hiveData.sharing;
+      setSharing(isSharing);
     }
-  }, [image]);
+  }, [image, sharing]);
 
   async function selectImage() {
     // Launch image library for image selection
@@ -105,96 +111,9 @@ export default function ViewHive({navigation, route}) {
     launchCamera(options, setImage);
   }
 
-  const saveChanges = async () => {
-    // Error handling
-    if (!name) {
-      setModalIsVisible(true);
-      setErrorMessage('Please add your apiary name');
-      return;
-    }
-    if (!frames) {
-      setModalIsVisible(true);
-      setErrorMessage('Please add the number of frames in your hive');
-      return;
-    }
-    if (!type) {
-      setModalIsVisible(true);
-      setErrorMessage('Please add the type of your hive');
-      return;
-    }
-
-    var downloadlink = '';
-    // Image upload
-    if (changed) {
-      const filename = uri.substring(uri.lastIndexOf('/') + 1);
-      const uploadUri =
-        Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
-      const task = storage().ref(filename).putFile(uploadUri);
-      try {
-        await task;
-      } catch (e) {
-        console.error(e);
-      }
-      setImage(null);
-      // Image upload complete
-
-      // Get download link
-      downloadlink = (
-        await storage().ref(filename).getDownloadURL()
-      ).toString();
-      try {
-        await downloadlink;
-      } catch (e) {
-        console.error(e);
-      }
-      var finalNotes = notes;
-      if (!finalNotes) {
-        finalNotes = '';
-      }
-    } else {
-      downloadlink = uri;
-    }
-
-    // Add apiary to firestore
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
-      .collection('Hives')
-      .doc(hiveData['name'])
-      .delete()
-      .then(() => {
-        firestore()
-          .collection('Users')
-          .doc(auth().currentUser.email)
-          .collection('Apiaries')
-          .doc(apiaryData['name'])
-          .collection('Hives')
-          .doc(name)
-          .set({
-            name: name,
-            frames: frames,
-            type: type,
-            notes: finalNotes,
-            downloadurl: downloadlink,
-            day: hiveData['day'],
-            month: hiveData['month'],
-            year: hiveData['year'],
-            latitude: hiveData['latitude'],
-            longitude: hiveData['longitude'],
-            checkDates: hiveData['checkdates'],
-          })
-          .then(() => {})
-          .catch(e => {
-            console.log(e);
-          });
-      })
-      .catch(e => {
-        console.log(e);
-      });
-    // Hive addition complete
-  };
+  async function switchReport() {
+    firestore().collection('Hives').doc(hiveId).update({sharing: !sharing});
+  }
 
   if (!ready) return null;
   return (
@@ -317,11 +236,19 @@ export default function ViewHive({navigation, route}) {
 
           {/* Create & Cancel buttons container*/}
           <View style={styles.saveContainer}>
-            {/* Create button */}
+            {/* Report button */}
             <TouchableOpacity
               style={[styles.saveButton, {backgroundColor: '#EEC746'}]}
-              onPress={saveChanges}>
-              <Text style={[styles.saveText, {color: 'white'}]}>Save</Text>
+              onPress={() => {
+                setSharing(!sharing);
+                switchReport();
+              }}>
+              <Text
+                style={[styles.saveText, {color: '#FFFFFF'}]}
+                numberOfLines={1}
+                adjustsFontSizeToFit>
+                {sharing ? 'Stop Reporting' : 'Report'}
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -484,6 +411,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat',
     fontWeight: '600',
     fontSize: 18,
+    padding: 2,
   },
   // Modal main content container
   modalView: {

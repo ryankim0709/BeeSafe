@@ -18,7 +18,7 @@ import Banner from '../../components/banner';
 import Icon from 'react-native-vector-icons/Feather';
 
 // Image storage imports
-import storage from '@react-native-firebase/storage';
+import storage, {firebase} from '@react-native-firebase/storage';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 
 // Auth imports
@@ -31,6 +31,7 @@ import {useFocusEffect} from '@react-navigation/native';
 import DropDownPicker from 'react-native-dropdown-picker';
 
 export default function CreateHive({navigation, route}) {
+  const data = route.data;
   // Dropdown states
   const [open, setOpen] = useState(false);
   const [hiveTypes, setHiveTypes] = useState([
@@ -73,11 +74,27 @@ export default function CreateHive({navigation, route}) {
   );
 
   useEffect(() => {
+    //getApiaryId();
     setLat(apiaryData['latitude']);
     setLon(apiaryData['longitude']);
     // Image URI for display
     setUri(image?.assets && image.assets[0].uri);
   }, [image]);
+
+  async function getApiaryId() {
+    var ref = firestore()
+      .collection('Apiaries')
+      .where('name', '==', data.name)
+      .where('apiaryId', '==', data.apiaryId);
+
+    var apiaryId;
+    (await ref.get()).forEach(data => {
+      apiaryId = data.id;
+    });
+
+    console.log(apiaryId);
+    return apiaryId;
+  }
 
   async function selectImage() {
     // Launch image library for image selection
@@ -170,15 +187,13 @@ export default function CreateHive({navigation, route}) {
       console.error(e);
     }
 
+    var uid = auth().currentUser.uid;
+    var apiaryId = route.data.apiaryId;
+
     // Add apiary to firestore
     firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
       .collection('Hives')
-      .doc(name)
-      .set({
+      .add({
         name: name,
         frames: frames,
         type: type,
@@ -189,9 +204,30 @@ export default function CreateHive({navigation, route}) {
         year: year,
         latitude: lat,
         longitude: lon,
-        checkdates: [],
+        checks: [],
+        affected: false,
+        user: uid,
+        apiaryId: apiaryId,
+        sharing: false,
+        hiveId: '',
       })
-      .then(() => { 
+      .then(() => {
+        firestore()
+          .collection('Hives')
+          .where('user', '==', uid)
+          .where('downloadurl', '==', downloadlink)
+          .get()
+          .then(hive => {
+            var hiveId = '';
+            hive.forEach(doc => {
+              hiveId = doc.id;
+            });
+            console.log(hiveId);
+            firestore()
+              .collection('Hives')
+              .doc(hiveId)
+              .update({hiveId: hiveId});
+          });
         navigation.navigate('ApiaryBottomTabs', {
           screen: 'View Apiary',
           data: apiaryData,
