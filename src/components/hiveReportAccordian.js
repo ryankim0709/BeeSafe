@@ -1,5 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Image, ScrollView} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  ScrollView,
+  ImageBackground,
+} from 'react-native';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import Feather from 'react-native-vector-icons/Feather';
 import auth from '@react-native-firebase/auth';
@@ -12,8 +19,19 @@ export default function HiveReportAccordian(props) {
   const [date, setDate] = useState('');
   const data = props.data;
   const [open, setOpen] = useState(false);
+  const [bbox, setbbox] = useState([]);
+  const [sickbboxId, setsickbboxId] = useState([]);
   useEffect(() => {
-    setDate(props.data.date.replaceAll('.', '/'));
+    setDate(data.date.replaceAll('.', '/'));
+    firestore()
+      .collection('images')
+      .doc(data.fileId)
+      .get()
+      .then(res => {
+        const imageData = res.data();
+        setbbox(imageData.bbox);
+        setsickbboxId(imageData.sickBBIdx);
+      });
   }, []);
 
   return (
@@ -36,7 +54,34 @@ export default function HiveReportAccordian(props) {
       <ScrollView>
         {open && (
           <View style={styles.contentContainer}>
-            <Image source={{uri: data.downloadurl}} style={styles.image} />
+            <ImageBackground
+              source={{uri: data.downloadurl}}
+              style={styles.image}>
+              {bbox.map((box, key) => {
+                var boundingBoxCoords = box.split(', ');
+                var x1 = parseInt(boundingBoxCoords[0]);
+                var y1 = parseInt(boundingBoxCoords[1]);
+                var x2 = parseInt(boundingBoxCoords[2]);
+                var y2 = parseInt(boundingBoxCoords[3]);
+                var w = x2 - x1;
+                var h = y2 - y1;
+                var color = 'green';
+                if (sickbboxId.includes(key)) color = 'red';
+                return (
+                  <View
+                    key={key}
+                    style={{
+                      position: 'absolute',
+                      borderWidth: 2,
+                      width: w,
+                      height: h,
+                      top: y1,
+                      left: x1,
+                      borderColor: color,
+                    }}></View>
+                );
+              })}
+            </ImageBackground>
             {data['result'] && (
               <Feather
                 name="check-square"
@@ -61,7 +106,6 @@ export default function HiveReportAccordian(props) {
 const styles = StyleSheet.create({
   container: {
     width: '90%',
-    height: 350,
     marginTop: '2.8077%',
     alignSelf: 'center',
     borderColor: '#EEC746',
@@ -77,7 +121,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    height: 400,
+    height: 320,
   },
   image: {
     width: 300,

@@ -16,6 +16,7 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import storage, {firebase} from '@react-native-firebase/storage';
 import LinearGradient from 'react-native-linear-gradient';
+import {useFocusEffect} from '@react-navigation/native';
 
 export default function DiseaseScan({navigation, route}) {
   const hiveId = route.hiveData.hiveId;
@@ -25,8 +26,24 @@ export default function DiseaseScan({navigation, route}) {
   const [uri, setUri] = useState();
   const [image, setImage] = useState();
   const [loadingResults, setLoadingResults] = useState(false);
+  const [sharing, setSharing] = useState();
+  const [resultsBack, setResultsBack] = useState(false);
+  const [resultData, setResultData] = useState();
 
-  useEffect(() => {}, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      firestore()
+        .collection('Hives')
+        .doc(hiveId)
+        .get()
+        .then(res => {
+          setSharing(res.data().sharing);
+        });
+    }),
+  );
+  useEffect(() => {
+    setSharing(hiveData.sharing);
+  }, [route]);
 
   async function selectImage() {
     // Launch image library for image selection
@@ -111,6 +128,16 @@ export default function DiseaseScan({navigation, route}) {
             return;
           } else {
             console.log(fileId);
+            firestore()
+              .collection('images')
+              .doc(fileId)
+              .get()
+              .then(res => {
+                setResultData(res.data());
+              })
+              .then(() => {
+                setResultsBack(true);
+              });
             var today = new Date();
             var day = String(today.getDate());
             var monthNum = String(today.getMonth() + 1);
@@ -122,6 +149,7 @@ export default function DiseaseScan({navigation, route}) {
               date: dayString,
               downloadurl: downloadlink,
               result: result,
+              fileId: fileId,
             };
             var checksData = hiveData.checks;
             checksData.push(data);
@@ -136,7 +164,7 @@ export default function DiseaseScan({navigation, route}) {
               });
           }
         });
-    }, 15000);
+    }, 20000);
   }
 
   async function updateHive() {
@@ -206,10 +234,10 @@ export default function DiseaseScan({navigation, route}) {
       <Banner text="Disease Scan" />
 
       <View>
-        <View style={styles.imageBoxContainer}>
+        <View style={[styles.imageBoxContainer, {height: 210}]}>
           <ImageBackground
             source={{uri: uri}}
-            style={[styles.imageBox, {justifyContent: 'flex-end'}]}
+            style={[styles.imageBox, {justifyContent: 'flex-end', height: 210}]}
             resizeMode="cover"
             imageStyle={{borderRadius: 10, width: '100%'}}>
             <View style={{flexDirection: 'row', alignSelf: 'flex-end'}}>
@@ -234,13 +262,38 @@ export default function DiseaseScan({navigation, route}) {
         </View>
 
         {/* Results box */}
-        {uri && (
-          <View style={styles.imageBoxContainer}>
+        {resultsBack && (
+          <View style={[styles.imageBoxContainer]}>
             <ImageBackground
               source={{uri: uri}}
               style={[styles.imageBox, {justifyContent: 'flex-end'}]}
               resizeMode="cover"
-              imageStyle={{borderRadius: 10, width: '100%'}}></ImageBackground>
+              imageStyle={{borderRadius: 10, width: '100%'}}>
+              {resultData.bbox.map((box, key) => {
+                var boundingBoxCoords = box.split(', ');
+                var x1 = parseInt(boundingBoxCoords[0]);
+                var y1 = parseInt(boundingBoxCoords[1]);
+                var x2 = parseInt(boundingBoxCoords[2]);
+                var y2 = parseInt(boundingBoxCoords[3]);
+                var w = x2 - x1;
+                var h = y2 - y1;
+                var color = 'green';
+                if (resultData.sickBBIdx.includes(key)) color = 'red';
+                return (
+                  <View
+                    key={key}
+                    style={{
+                      position: 'absolute',
+                      borderWidth: 2,
+                      width: w,
+                      height: h,
+                      top: y1,
+                      left: x1,
+                      borderColor: color,
+                    }}></View>
+                );
+              })}
+            </ImageBackground>
           </View>
         )}
       </View>
@@ -259,8 +312,11 @@ export default function DiseaseScan({navigation, route}) {
           onPress={() => {
             reportHive();
           }}>
-          <Text style={[styles.saveReportText, {color: '#EEC746'}]}>
-            Report
+          <Text
+            style={[styles.saveReportText, {color: '#EEC746'}]}
+            adjustsFontSizeToFit
+            numberOfLines={1}>
+            {sharing === true ? 'Stop reporting' : 'Report'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -302,8 +358,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   imageBox: {
-    width: '86%',
-    height: '100%',
+    width: 300,
+    height: 300,
     alignSelf: 'center',
     alignItems: 'center',
     flexDirection: 'row',
@@ -313,13 +369,12 @@ const styles = StyleSheet.create({
   },
   imageBoxContainer: {
     width: '100%',
-    height: Dimensions.get('window').height * 0.3,
+    height: 300,
     marginTop: '2.3758%',
     borderRadius: 10,
     alignSelf: 'center',
     alignItems: 'center',
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
   },
   saveReportContainer: {
     width: '54.9065%',
@@ -345,6 +400,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat',
     fontWeight: '600',
     fontSize: 18,
+    padding: 2,
   },
   modalView: {
     margin: 20,
