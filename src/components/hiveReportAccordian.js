@@ -56,13 +56,13 @@ export default function HiveReportAccordian(props) {
           <View style={styles.contentContainer}>
             <ImageBackground
               source={{uri: data.downloadurl}}
-              style={styles.image}>
+              style={styles.image} resizeMode="contain">
               {bbox.map((box, key) => {
                 var boundingBoxCoords = box.split(', ');
-                var x1 = parseInt(boundingBoxCoords[0]);
-                var y1 = parseInt(boundingBoxCoords[1]);
-                var x2 = parseInt(boundingBoxCoords[2]);
-                var y2 = parseInt(boundingBoxCoords[3]);
+                var x1 = parseInt(boundingBoxCoords[0]) / 1182 * 300;
+                var y1 = parseInt(boundingBoxCoords[1]) / 664 * 300;
+                var x2 = parseInt(boundingBoxCoords[2]) / 1182 * 300;
+                var y2 = parseInt(boundingBoxCoords[3])/ 664 * 300;
                 var w = x2 - x1;
                 var h = y2 - y1;
                 var color = 'green';

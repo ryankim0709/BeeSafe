@@ -164,12 +164,13 @@ export default function CreateApiary({navigation}) {
         longitude: longitude,
         notes: notes,
         downloadurl: downloadlink,
-        city: city,
-        country: country,
+        city: "Palo Alto",
+        country: 'US',
         hives: [],
         user: uid,
         userApiaryId: userApiaryId,
         apiaryId: '',
+        time: new Date().getTime(),
       })
       .then(() => {
         firestore()
@@ -194,6 +195,7 @@ export default function CreateApiary({navigation}) {
                   .doc(apiaryId)
                   .update({apiaryId: apiaryId});
               });
+            console.log(city, country);
             navigation.goBack();
           });
       });
@@ -240,6 +242,51 @@ export default function CreateApiary({navigation}) {
       var lon = parseFloat(location['longitude']).toFixed(4).toString();
       setLatitude(lat);
       setLongitude(lon);
+    }
+  }
+
+  async function getGivenLocation(myLat, myLong) {
+    let permission = await RNLocation.checkPermission({
+      ios: 'whenInUse', // or 'always'
+      android: {
+        detail: 'coarse', // or 'fine'
+      },
+    });
+    let location;
+    if (!permission) {
+      permission = await RNLocation.requestPermission({
+        ios: 'whenInUse',
+        android: {
+          detail: 'coarse',
+          rationale: {
+            title: 'We need to access your location',
+            message: 'We use your location to show where you are on the map',
+            buttonPositive: 'OK',
+            buttonNegative: 'Cancel',
+          },
+        },
+      });
+
+      if (permission == false) {
+        Alert.alert(
+          'Location Preferences',
+          'Please allow location permissions for automatic latitude/longitude',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {text: 'OK', onPress: () => Linking.openSettings()},
+          ],
+        );
+      }
+    } else {
+      location = await RNLocation.getLatestLocation({timeout: 100});
+      var lat = parseFloat(myLat).toFixed(4).toString();
+      var lon = parseFloat(myLong).toFixed(4).toString();
+      console.log(lat, lon);
+      setLatitude(lat);
+      setLongitude(lon);
 
       return new Promise((resolve, reject) => {
         fetch(
@@ -252,6 +299,7 @@ export default function CreateApiary({navigation}) {
         )
           .then(response => response.json())
           .then(responseJson => {
+            console.log(responseJson.results[0]['address_components']);
             if (responseJson.status === 'OK') {
               var locData = responseJson.results[0]['address_components'];
 
@@ -264,9 +312,11 @@ export default function CreateApiary({navigation}) {
                   types.includes('locality') ||
                   types.includes('sublocality')
                 ) {
+                  console.log(long_name);
                   setCity(long_name);
                 }
                 if (types.includes('country')) {
+                  console.log(short_name);
                   setCountry(short_name);
                 }
               }
@@ -335,7 +385,7 @@ export default function CreateApiary({navigation}) {
             <TextInput
               style={styles.posInputBox}
               placeholder="Latitude"
-              keyboardType="numeric"
+              keyboardType="decimal-pad"
               placeholderTextColor={'#5a5a5a'}
               value={latitude}
               onChangeText={text => {
@@ -380,7 +430,10 @@ export default function CreateApiary({navigation}) {
             {/* Create button */}
             <TouchableOpacity
               style={[styles.createCancelButton, {backgroundColor: '#EEC746'}]}
-              onPress={uploadApiary}>
+              onPress={() => {
+                getGivenLocation(latitude, longitude);
+                uploadApiary();
+              }}>
               <Text style={[styles.createCancelText, {color: 'white'}]}>
                 Create
               </Text>

@@ -26,6 +26,16 @@ export default function ApiaryCell(props) {
       apiaryId = data.id;
     });
 
+    (
+      await firestore()
+        .collection('Hives')
+        .where('apiaryId', '==', apiaryId)
+        .get()
+    ).forEach(hive => {
+      var hiveId = hive.hiveId;
+      firestore().collection('Hives').doc(hiveId).delete();
+    });
+
     firestore().collection('Apiaries').doc(apiaryId).delete();
   }
   const uri = data.downloadurl;
@@ -54,18 +64,17 @@ export default function ApiaryCell(props) {
               alignItems: 'center',
               justifyContent: 'center',
               alignSelf: 'center',
+              width: '90%',
             }}>
-            <Text style={styles.infoText}>{data['name']}, </Text>
-            {data['city'] === '' && (
-              <Text style={styles.infoText}>
-                {data['latitude']} {data['longitude']}
-              </Text>
-            )}
-            {data['city'] !== '' && (
-              <Text style={styles.infoText}>
-                {data['city']} {data['country']}
-              </Text>
-            )}
+            <Text
+              style={styles.infoText}
+              numberOfLines={1}
+              adjustsFontSizeToFit>
+              {data['name']},{' '}
+              {!data['city']
+                ? `${data['latitude']} ${data['longitude']}`
+                : `${data['city']} ${data['country']}`}
+            </Text>
           </View>
           {/* Apiary Deletion */}
           <TouchableOpacity
@@ -108,7 +117,6 @@ const styles = StyleSheet.create({
   // Info text container
   textBox: {
     marginTop: '2%',
-    marginLeft: '4.70914%',
     justifyContent: 'space-between',
     flexDirection: 'row',
     display: 'flex',
@@ -119,6 +127,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 20,
     alignSelf: 'center',
+    width: '95%',
   },
   // Cover image
   coverImage: {
