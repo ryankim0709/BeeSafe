@@ -3,6 +3,7 @@ import React from 'react';
 import Feather from 'react-native-vector-icons/Feather';
 import Ionicon from 'react-native-vector-icons/Ionicons';
 import Community from 'react-native-vector-icons/MaterialCommunityIcons';
+import Octicons from 'react-native-vector-icons/Octicons'
 
 // Navigation imports
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -13,6 +14,7 @@ import DiseaseScan from '../screens/HiveScreen/diseaseScan.js';
 import BackOne from '../screens/backOne.js';
 import ViewHive from '../screens/HiveScreen/viewHive.js';
 import HiveReport from '../screens/HiveScreen/hiveReport.js';
+import VarroaGraph from '../screens/HiveScreen/varroaGraph.js';
 
 const Tab = createBottomTabNavigator();
 
@@ -101,6 +103,24 @@ export default function HiveBottomTabs({route}) {
           },
         }}>
         {props => <HiveReport route={route.params} />}
+      </Tab.Screen>
+
+      <Tab.Screen
+        name="Hive Graph"
+        options={{
+          tabBarIcon: ({color, size}) => (
+            <Octicons name="graph" color={color} size={size} />
+          ),
+          tabBarStyle: {
+            backgroundColor: '#F09819',
+            position: 'absolute',
+            overflow: 'hidden',
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            display: getTabBarVisibility(route),
+          },
+        }}>
+        {props => <VarroaGraph route={route.params} />}
       </Tab.Screen>
     </Tab.Navigator>
   );

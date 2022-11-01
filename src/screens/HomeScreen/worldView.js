@@ -67,7 +67,6 @@ export default function WorldView({route}) {
     console.log(e);
   }
   async function getData() {
-    var dataTemp = [];
     var count = 0;
     console.log('Getting Data');
 
@@ -100,6 +99,7 @@ export default function WorldView({route}) {
               },
               img: img,
             };
+            var dataTemp = hiveData ? hiveData : [];
             dataTemp.push(dataObj);
             setHiveData(dataTemp);
           });

@@ -7,6 +7,7 @@ import {
   ImageBackground,
   Modal,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import Banner from '../../components/banner';
 import Feather from 'react-native-vector-icons/Feather';
@@ -24,6 +25,8 @@ export default function DiseaseScan({navigation, route}) {
   const hiveData = route['hiveData'];
   const [frameCheck, setFrameCheck] = useState([]);
   const [uri, setUri] = useState();
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
   const [image, setImage] = useState();
   const [loadingResults, setLoadingResults] = useState(false);
   const [sharing, setSharing] = useState();
@@ -58,6 +61,10 @@ export default function DiseaseScan({navigation, route}) {
     launchImageLibrary(options, setImage).then(res => {
       var temp_uri = res?.assets && res.assets[0].uri;
       setUri(temp_uri);
+      Image.getSize(temp_uri, (width, height) => {
+        setHeight(height);
+        setWidth(width);
+      });
 
       var result = [true, false];
       result = result[Math.floor(Math.random() * 2)];
@@ -76,6 +83,10 @@ export default function DiseaseScan({navigation, route}) {
     launchCamera(options, setImage).then(res => {
       var temp_uri = res?.assets && res.assets[0].uri;
       setUri(temp_uri);
+      Image.getSize(temp_uri, (width, height) => {
+        setHeight(height);
+        setWidth(width);
+      });
 
       var result = [true, false];
       result = result[Math.floor(Math.random() * 2)];
@@ -127,7 +138,6 @@ export default function DiseaseScan({navigation, route}) {
             console.log('Not ready');
             return;
           } else {
-            console.log(fileId);
             firestore()
               .collection('images')
               .doc(fileId)
@@ -138,6 +148,7 @@ export default function DiseaseScan({navigation, route}) {
               .then(() => {
                 setResultsBack(true);
               });
+
             var today = new Date();
             var day = String(today.getDate());
             var monthNum = String(today.getMonth() + 1);
@@ -164,7 +175,7 @@ export default function DiseaseScan({navigation, route}) {
               });
           }
         });
-    }, 20000);
+    }, 30000);
   }
 
   async function updateHive() {
@@ -193,39 +204,8 @@ export default function DiseaseScan({navigation, route}) {
   }
 
   async function reportHive() {
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .collection('Apiaries')
-      .doc(apiaryData['name'])
-      .get()
-      .then(res => {
-        var sharingData = res.data()['sharing'];
-        if (!sharingData.includes(hiveData['name'])) {
-          sharingData.push(hiveData['name']);
-        }
-        firestore()
-          .collection('Users')
-          .doc(auth().currentUser.email)
-          .collection('Apiaries')
-          .doc(apiaryData['name'])
-          .update({sharing: sharingData});
-      });
-
-    firestore()
-      .collection('Users')
-      .doc(auth().currentUser.email)
-      .get()
-      .then(res => {
-        var sharingData = res.data()['sharing'];
-        if (!sharingData.includes(apiaryData['name'])) {
-          sharingData.push(apiaryData['name']);
-        }
-        firestore()
-          .collection('Users')
-          .doc(auth().currentUser.email)
-          .update({sharing: sharingData});
-      });
+    firestore().collection('Hives').doc(hiveId).update({sharing: !sharing});
+    setSharing(!sharing);
   }
 
   if (!frameCheck) return null;
@@ -237,8 +217,15 @@ export default function DiseaseScan({navigation, route}) {
         <View style={[styles.imageBoxContainer, {height: 210}]}>
           <ImageBackground
             source={{uri: uri}}
-            style={[styles.imageBox, {justifyContent: 'flex-end', height: 210}]}
-            resizeMode="cover"
+            style={[
+              styles.imageBox,
+              {
+                justifyContent: 'flex-end',
+                height: 210,
+                backgroundColor: '#D9D9D9',
+              },
+            ]}
+            resizeMode="contain"
             imageStyle={{borderRadius: 10, width: '100%'}}>
             <View style={{flexDirection: 'row', alignSelf: 'flex-end'}}>
               <TouchableOpacity
@@ -267,16 +254,22 @@ export default function DiseaseScan({navigation, route}) {
             <ImageBackground
               source={{uri: uri}}
               style={[styles.imageBox, {justifyContent: 'flex-end'}]}
-              resizeMode="cover"
+              resizeMode="stretch"
               imageStyle={{borderRadius: 10, width: '100%'}}>
               {resultData.bbox.map((box, key) => {
+
+                console.log(width, height);
                 var boundingBoxCoords = box.split(', ');
-                var x1 = parseInt(boundingBoxCoords[0]);
-                var y1 = parseInt(boundingBoxCoords[1]);
-                var x2 = parseInt(boundingBoxCoords[2]);
-                var y2 = parseInt(boundingBoxCoords[3]);
-                var w = x2 - x1;
-                var h = y2 - y1;
+                var x1 = (parseInt(boundingBoxCoords[0]) / width) * 300;
+                var y1 = (parseInt(boundingBoxCoords[1]) / height) * 300;
+                var x2 = (parseInt(boundingBoxCoords[2]) / width) * 300;
+                var y2 = (parseInt(boundingBoxCoords[3]) / height) * 300;
+                var r1 = width / 300;
+                var r2 = width / 300;
+                var w = (x2 - x1);
+                var h = (y2 - y1);
+                console.log(x1, y1, x2, y2, w, h, width, height);
+                console.log(Dimensions.get('window').width);
                 var color = 'green';
                 if (resultData.sickBBIdx.includes(key)) color = 'red';
                 return (
@@ -364,7 +357,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-evenly',
-    backgroundColor: '#D9D9D9',
+    backgroundColor: 'white',
     borderRadius: 10,
   },
   imageBoxContainer: {

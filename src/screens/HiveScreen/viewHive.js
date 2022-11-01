@@ -65,6 +65,13 @@ export default function ViewHive({navigation, route}) {
     React.useCallback(() => {
       setUri(null);
       setReady(true);
+      firestore()
+        .collection('Hives')
+        .doc(hiveId)
+        .get()
+        .then(res => {
+          setSharing(res.data().sharing);
+        });
       return () => {};
     }, []),
   );
